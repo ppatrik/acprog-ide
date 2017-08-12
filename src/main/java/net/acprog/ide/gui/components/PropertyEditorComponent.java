@@ -1,3 +1,5 @@
+package net.acprog.ide.gui.components;
+
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import sk.gbox.swing.propertiespanel.ComposedProperty;
@@ -9,8 +11,6 @@ import sk.gbox.swing.propertiespanel.types.DefaultPropertyTypeResolver;
 import javax.swing.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringReader;
 
 public class PropertyEditorComponent implements Component {

@@ -1,3 +1,5 @@
+package net.acprog.ide.gui.utils;
+
 import org.jdesktop.swingx.MultiSplitLayout;
 
 public class ApplicationSplitHorizontalPaneModel extends MultiSplitLayout.Split {

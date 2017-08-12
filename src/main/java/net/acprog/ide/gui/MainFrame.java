@@ -1,10 +1,14 @@
+package net.acprog.ide.gui;
+
+import net.acprog.ide.gui.components.*;
+import net.acprog.ide.gui.utils.*;
 import org.jdesktop.swingx.JXMultiSplitPane;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 
-public class Application extends JFrame {
+public class MainFrame extends JFrame {
 
     protected JPanel panel;
 
@@ -20,7 +24,7 @@ public class Application extends JFrame {
 
     protected JToolBar toolBar;
 
-    public Application() {
+    public MainFrame() {
 
         InitializeMenuBar();
 
@@ -60,7 +64,7 @@ public class Application extends JFrame {
 
         panel.add(toolBar, BorderLayout.PAGE_START);
 
-        Component c;
+        net.acprog.ide.gui.components.Component c;
 
         verticalPanel = new JXMultiSplitPane();
         verticalPanelModel = new ApplicationSplitVerticalPaneModel();
@@ -134,32 +138,5 @@ public class Application extends JFrame {
         menu.add(menuItem);
 
         setJMenuBar(menuBar);
-    }
-
-
-    public static void main(String[] args) {
-        // Start all Swing applications on the EDT.
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    // Set cross-platform Java L&F (also called "Metal")
-                    UIManager.setLookAndFeel(
-                            UIManager.getSystemLookAndFeelClassName());
-                }
-                catch (UnsupportedLookAndFeelException e) {
-                    // handle exception
-                }
-                catch (ClassNotFoundException e) {
-                    // handle exception
-                }
-                catch (InstantiationException e) {
-                    // handle exception
-                }
-                catch (IllegalAccessException e) {
-                    // handle exception
-                }
-                new Application().setVisible(true);
-            }
-        });
     }
 }

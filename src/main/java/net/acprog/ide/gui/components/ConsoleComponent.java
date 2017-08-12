@@ -1,3 +1,5 @@
+package net.acprog.ide.gui.components;
+
 import javax.swing.*;
 
 public class ConsoleComponent implements Component {
