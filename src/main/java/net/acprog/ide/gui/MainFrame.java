@@ -1,14 +1,23 @@
 package net.acprog.ide.gui;
 
+import net.acprog.ide.configurations.IdeProject;
 import net.acprog.ide.gui.components.*;
 import net.acprog.ide.gui.utils.*;
+import net.acprog.ide.utils.event.EventManager;
+import net.acprog.ide.utils.event.EventType;
 import org.jdesktop.swingx.JXMultiSplitPane;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
 public class MainFrame extends JFrame {
+
+    private final IdeProject ideProject;
+
+    private final EventManager eventManager;
 
     protected JPanel panel;
 
@@ -24,7 +33,11 @@ public class MainFrame extends JFrame {
 
     protected JToolBar toolBar;
 
-    public MainFrame() {
+    public MainFrame(IdeProject ideProject) {
+
+        this.ideProject = ideProject;
+
+        this.eventManager = new EventManager();
 
         InitializeMenuBar();
 
@@ -64,7 +77,7 @@ public class MainFrame extends JFrame {
 
         panel.add(toolBar, BorderLayout.PAGE_START);
 
-        net.acprog.ide.gui.components.Component c;
+        IdeComponent c;
 
         verticalPanel = new JXMultiSplitPane();
         verticalPanelModel = new ApplicationSplitVerticalPaneModel();
@@ -75,22 +88,22 @@ public class MainFrame extends JFrame {
         horizontalPanel.setModel(horizontalPanelModel);
 
         // componenty
-        c = new ToolBoxComponent();
+        c = new ToolBoxIdeComponent(this);
         horizontalPanel.add(c.render(), ApplicationSplitHorizontalPaneModel.P1);
 
-        c = new VisualEditorComponent();
+        c = new VisualEditorIdeComponent(this);
         horizontalPanel.add(c.render(), ApplicationSplitHorizontalPaneModel.P2);
 
-        c = new EditorComponent();
+        c = new EditorIdeComponent(this);
         horizontalPanel.add(c.render(), ApplicationSplitHorizontalPaneModel.P3);
 
-        c = new PropertyEditorComponent();
+        c = new PropertyEditorIdeComponent(this);
         horizontalPanel.add(c.render(), ApplicationSplitHorizontalPaneModel.P4);
 
         verticalPanel.add(horizontalPanel, ApplicationSplitVerticalPaneModel.P1);
 
         // konzola
-        c = new ConsoleComponent();
+        c = new ConsoleIdeComponent(this);
         verticalPanel.add(c.render(), ApplicationSplitVerticalPaneModel.P2);
 
         panel.add(verticalPanel, BorderLayout.CENTER);
@@ -104,16 +117,27 @@ public class MainFrame extends JFrame {
         JMenu menu;
         JMenuItem menuItem;
 
-        // Build Project menu
-        menu = new JMenu("Project");
+        // Build IdeProject menu
+        menu = new JMenu("IdeProject");
         menu.setMnemonic(KeyEvent.VK_F);
         menuBar.add(menu);
 
-        // Build Project submenu
+        // Build IdeProject submenu
         menuItem = new JMenuItem("New project", KeyEvent.VK_N);
         menu.add(menuItem);
 
         menuItem = new JMenuItem("Open project", KeyEvent.VK_O);
+        menu.add(menuItem);
+
+        menuItem = new JMenuItem("Save project", KeyEvent.VK_O);
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("Save project");
+                eventManager.callEvent(EventType.EVENT_SAVE);
+                ideProject.save();
+            }
+        });
         menu.add(menuItem);
 
         menuItem = new JMenuItem("Preferences", KeyEvent.VK_P);
@@ -138,5 +162,13 @@ public class MainFrame extends JFrame {
         menu.add(menuItem);
 
         setJMenuBar(menuBar);
+    }
+
+    public IdeProject getIdeProject() {
+        return ideProject;
+    }
+
+    public EventManager getEventManager() {
+        return eventManager;
     }
 }

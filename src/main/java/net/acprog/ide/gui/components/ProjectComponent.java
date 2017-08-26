@@ -1,37 +1,59 @@
 package net.acprog.ide.gui.components;
 
 import net.acprog.builder.project.Component;
+import net.acprog.ide.gui.MainFrame;
+import net.acprog.ide.utils.event.EventType;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 
 public class ProjectComponent extends JButton {
-    protected Component projectComponent;
 
-    /** If sets <b>TRUE</b> this component is draggable */
+    protected Component projectComponent;
+    protected VisualEditorIdeComponent visualEditorIdeComponent;
+
+    /**
+     * If sets <b>TRUE</b> this component is draggable
+     */
     private boolean draggable = true;
 
-    /** 2D Point representing the coordinate where mouse is, relative parent container */
+    /**
+     * 2D Point representing the coordinate where mouse is, relative parent container
+     */
     protected Point anchorPoint;
 
-    /** Default mouse cursor for dragging action */
+    /**
+     * Default mouse cursor for dragging action
+     */
     protected Cursor draggingCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
 
-    /** If sets <b>TRUE</b> when dragging component,
-     it will be painted over each other (z-Buffer change) */
+    /**
+     * If sets <b>TRUE</b> when dragging component,
+     * it will be painted over each other (z-Buffer change)
+     */
     protected boolean overbearing = false;
 
-    public ProjectComponent(Component projectComponent) {
+    public ProjectComponent(VisualEditorIdeComponent visualEditorIdeComponent, Component projectComponent) {
         super();
 
+        this.visualEditorIdeComponent = visualEditorIdeComponent;
         this.projectComponent = projectComponent;
 
         updateUI();
 
         addDragListeners();
+
+        addClickListeners();
+    }
+
+    private void addClickListeners() {
+        addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                visualEditorIdeComponent.getMainFrame().getEventManager().callEvent(EventType.EVENT_COMPONENT_SELECTED, (Object) projectComponent);
+            }
+        });
     }
 
     /**
@@ -73,7 +95,7 @@ public class ProjectComponent extends JButton {
     public void updateUI() {
         if (projectComponent != null) {
             setText(projectComponent.getName());
-            setBounds(10, 40, getPreferredSize().width, getPreferredSize().height);
+            setBounds(projectComponent.getLeft(), projectComponent.getTop(), projectComponent.getWidth(), projectComponent.getHeight());
         }
         super.updateUI();
     }

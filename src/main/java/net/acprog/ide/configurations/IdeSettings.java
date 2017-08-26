@@ -2,17 +2,17 @@ package net.acprog.ide.configurations;
 
 import java.io.File;
 
-public class Settings {
-    private static Settings ourInstance = new Settings();
+public class IdeSettings {
+    private static IdeSettings ourInstance = new IdeSettings();
 
-    public static Settings getInstance() {
+    public static IdeSettings getInstance() {
         return ourInstance;
     }
 
 
     private File acprogModulesFolder = new File("c:\\_data\\skola\\diplomovka\\_projekt\\acprog-modules\\acp\\");
 
-    private Settings() {
+    private IdeSettings() {
     }
 
     public File getAcprogModulesFolder() {

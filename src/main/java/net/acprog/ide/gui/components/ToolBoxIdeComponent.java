@@ -1,7 +1,8 @@
 package net.acprog.ide.gui.components;
 
 import net.acprog.builder.modules.Module;
-import net.acprog.ide.configurations.Settings;
+import net.acprog.ide.configurations.IdeSettings;
+import net.acprog.ide.gui.MainFrame;
 import net.acprog.ide.utils.ACPModules;
 import net.miginfocom.swing.MigLayout;
 
@@ -9,15 +10,18 @@ import javax.swing.*;
 import java.io.File;
 import java.util.Collection;
 
-public class ToolBoxComponent implements Component {
+public class ToolBoxIdeComponent implements IdeComponent {
+    private final MainFrame mainFrame;
+
     protected JScrollPane scrollPane;
 
-    public ToolBoxComponent() {
+    public ToolBoxIdeComponent(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
         InitializeComponents();
     }
 
     private void InitializeComponents() {
-        File acpModulesDirectory = Settings.getInstance().getAcprogModulesFolder();
+        File acpModulesDirectory = IdeSettings.getInstance().getAcprogModulesFolder();
         ACPModules acpModules = new ACPModules(acpModulesDirectory);
         Collection<Module> allModules = acpModules.scanDirectory();
 

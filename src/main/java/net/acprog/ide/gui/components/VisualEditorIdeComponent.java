@@ -1,11 +1,17 @@
 package net.acprog.ide.gui.components;
 
-import net.miginfocom.swing.MigLayout;
+import net.acprog.builder.project.Project;
+import net.acprog.ide.gui.MainFrame;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class VisualEditorComponent implements Component {
+public class VisualEditorIdeComponent implements IdeComponent {
+    private final MainFrame mainFrame;
+
+    public MainFrame getMainFrame() {
+        return mainFrame;
+    }
 
     class VisualEditorLayout implements LayoutManager {
 
@@ -88,27 +94,24 @@ public class VisualEditorComponent implements Component {
     }
 
     protected JScrollPane scrollPane;
+    protected JPanel panel;
 
-    public VisualEditorComponent() {
+    public VisualEditorIdeComponent(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
         InitializeComponents();
+
+        // vlozenie komponentov do plochy
+        Project project = mainFrame.getIdeProject().getProject();
+        for (net.acprog.builder.project.Component component : project.getComponents()) {
+            ProjectComponent pc = new ProjectComponent(this, component);
+            panel.add(pc);
+        }
     }
 
     private void InitializeComponents() {
-        JPanel panel = new JPanel();
+        panel = new JPanel();
         panel.setLayout(new VisualEditorLayout());
 
-        // TODO zobraz si projekt a nacitat z neho komponenty
-
-        ProjectComponent pc;
-        net.acprog.builder.project.Component c;
-
-        c = new net.acprog.builder.project.Component();
-        c.setName("acp.nieco.pekne");
-        c.setType("utils");
-        c.setDescription("dgdfgfdgfgfdgdfgdgdfgdgdfgdf");
-        pc = new ProjectComponent(c);
-
-        panel.add(pc);
 
         scrollPane = new JScrollPane(panel);
 

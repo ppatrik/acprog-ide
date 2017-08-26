@@ -1,11 +1,16 @@
 package net.acprog.ide.gui.components;
 
+import net.acprog.ide.gui.MainFrame;
+
 import javax.swing.*;
 
-public class ConsoleComponent implements Component {
+public class ConsoleIdeComponent implements IdeComponent {
+    private final MainFrame mainFrame;
+
     protected JTextField panel;
 
-    public ConsoleComponent() {
+    public ConsoleIdeComponent(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
         InitializeComponents();
     }
 
