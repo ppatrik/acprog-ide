@@ -1,21 +1,22 @@
 package net.acprog.ide.gui.components;
 
+import net.acprog.builder.components.Event;
+import net.acprog.builder.components.PropertyType;
+import net.acprog.builder.modules.ComponentType;
+import net.acprog.builder.modules.Module;
 import net.acprog.builder.project.Component;
 import net.acprog.ide.gui.MainFrame;
+import net.acprog.ide.utils.ACPModules;
 import net.acprog.ide.utils.event.EventType;
 import net.acprog.ide.utils.event.Observer;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
 import sk.gbox.swing.propertiespanel.ComposedProperty;
 import sk.gbox.swing.propertiespanel.PropertiesPanel;
 import sk.gbox.swing.propertiespanel.Property;
-import sk.gbox.swing.propertiespanel.XmlPropertyBuilder;
-import sk.gbox.swing.propertiespanel.types.DefaultPropertyTypeResolver;
+import sk.gbox.swing.propertiespanel.SimpleProperty;
+import sk.gbox.swing.propertiespanel.types.StringType;
 
 import javax.swing.*;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.StringReader;
+import java.util.Map;
 
 public class PropertyEditorIdeComponent implements IdeComponent {
     private final MainFrame mainFrame;
@@ -37,84 +38,71 @@ public class PropertyEditorIdeComponent implements IdeComponent {
             @Override
             public void onEvent(EventType eventType, Object o) {
                 projectComponent = (Component) o;
-                reloadPropertiesPanel();
+                setModelProperties();
             }
         });
     }
 
-    private void reloadPropertiesPanel() {
-        setModelFromXml();
-    }
-
     private void InitializeComponents() {
         propertiesPanel = new PropertiesPanel();
-
-        XmlPropertyBuilder builder = new XmlPropertyBuilder();
-        Property property = new ComposedProperty();
-        propertiesPanel.setModel((ComposedProperty) property);
     }
 
-    private void setModelFromXml() {
-        try {
-            DocumentBuilder domParser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-
-            String xml = "<?xml version=\"1.0\"?>\n" +
-                    "<properties label=\"Demo properties\"\n" +
-                    "\thint=\"Properties created according to xml configuration.\">\n" +
-                    "\t<property name=\"properties\">\n" +
-                    "\t\t<label>Properties</label>\n" +
-                    "\t\t<hint>Basic configuration properties.</hint>\n" +
-                    "\t\t<subproperties>\n" +
-                    "\t\t\t<property name=\"name\" type=\"String\">\n" +
-                    "\t\t\t\t<label>Name</label>\n" +
-                    "\t\t\t\t<hint title=\"properties.name\">Name of component.</hint>\n" +
-                    "\t\t\t</property>\n" +
-                    "\t\t\t<property name=\"type\" type=\"String\">\n" +
-                    "\t\t\t\t<label>Type</label>\n" +
-                    "\t\t\t\t<hint title=\"properties.name\">Type of component.</hint>\n" +
-                    "\t\t\t</property>\n" +
-                    "\t\t\t<property name=\"enabled\" type=\"Boolean\">\n" +
-                    "\t\t\t\t<label>enabled</label>\n" +
-                    "\t\t\t\t<hint title=\"properties.enabled\">Indicates whether something is enabled.</hint>\n" +
-                    "\t\t\t</property>\n" +
-                    "\t\t\t<property name=\"count\">\n" +
-                    "\t\t\t\t<label>count</label>\n" +
-                    "\t\t\t\t<hint>Count of something</hint>\n" +
-                    "\t\t\t\t<type name=\"Integer\">\n" +
-                    "\t\t\t\t\t<parameter name=\"minValue\" value=\"0\" />\n" +
-                    "\t\t\t\t\t<parameter name=\"maxValue\" value=\"10\" />\n" +
-                    "\t\t\t\t\t<parameter name=\"nullable\" value=\"false\" />\n" +
-                    "\t\t\t\t</type>\n" +
-                    "\t\t\t</property>\n" +
-                    "\t\t\t<property name=\"type2\">\n" +
-                    "\t\t\t\t<label>type</label>\n" +
-                    "\t\t\t\t<hint>Type of something</hint>\n" +
-                    "\t\t\t\t<type name=\"Enumeration\">\n" +
-                    "\t\t\t\t\t<map name=\"items\">\n" +
-                    "\t\t\t\t\t\t<item key=\"TypeA\">Type A</item>\n" +
-                    "\t\t\t\t\t\t<item key=\"TypeB\">Type B</item>\n" +
-                    "\t\t\t\t\t\t<item key=\"TypeC\">Type C</item>\n" +
-                    "\t\t\t\t\t</map>\n" +
-                    "\t\t\t\t</type>\n" +
-                    "\t\t\t</property>\n" +
-                    "\t\t</subproperties>\n" +
-                    "\t</property>\n" +
-                    "</properties>";
-            Document doc = domParser
-                    .parse(new InputSource(new StringReader(xml)));
-
-            XmlPropertyBuilder builder = new XmlPropertyBuilder();
-            builder.setDefaultPropertyTypeResolver(new DefaultPropertyTypeResolver());
-
-            Property property = builder.createProperties(doc);
-            if (property instanceof ComposedProperty) {
-                ComposedProperty cp = (ComposedProperty) property;
-                setPropertiesForEditor(cp);
-                propertiesPanel.setModel(cp);
-            }
-        } catch (Exception e) {
-            System.out.print(e);
+    private void setModelProperties() {
+        propertiesPanel.setModel(null);
+        Module module = ACPModules.getModule(projectComponent);
+        if (!(module instanceof ComponentType)) {
+            return;
         }
+        ComponentType componentType = (ComponentType) module;
+
+        ComposedProperty mainProperty = new ComposedProperty();
+        mainProperty.setLabel(module.getName());
+        mainProperty.setHint(module.getDescription());
+        ComposedProperty.PropertyList mainSubproperties = mainProperty.getSubproperties();
+
+        ComposedProperty propertiesProperty = new ComposedProperty();
+        propertiesProperty.setName("properties");
+        propertiesProperty.setLabel("Properties");
+        propertiesProperty.setHint(module.getName());
+        ComposedProperty.PropertyList propertiesSubproperties = propertiesProperty.getSubproperties();
+        initializeProperties(propertiesSubproperties, componentType);
+
+        ComposedProperty eventsProperty = new ComposedProperty();
+        eventsProperty.setName("events");
+        eventsProperty.setLabel("Events");
+        eventsProperty.setHint(module.getName());
+        ComposedProperty.PropertyList eventsSubroperties = eventsProperty.getSubproperties();
+        initializeEvents(eventsSubroperties, componentType);
+
+        mainSubproperties.add(propertiesProperty);
+        mainSubproperties.add(eventsProperty);
+
+        // refresh property panela
+        setPropertiesForEditor(mainProperty);
+        propertiesPanel.setModel(mainProperty);
+    }
+
+    private void initializeProperties(ComposedProperty.PropertyList subproperties, ComponentType componentType) {
+        Map<String, PropertyType> properties = componentType.getProperties();
+        properties.forEach((name, property) -> {
+            Property prop = new SimpleProperty(new StringType(), "");
+            prop.setName(name);
+            prop.setLabel(name);
+            prop.setValue(projectComponent.getProperties().get(name));
+            subproperties.add(prop);
+        });
+    }
+
+    private void initializeEvents(ComposedProperty.PropertyList subproperties, ComponentType componentType) {
+        Map<String, Event> events = componentType.getEvents();
+        events.forEach((name, property) -> {
+            Property prop = new SimpleProperty(new StringType(), "");
+            prop.setName(name);
+            prop.setLabel(name);
+            prop.setHint(property.getDescription());
+            prop.setValue(projectComponent.getEvents().get(name));
+            subproperties.add(prop);
+        });
     }
 
     public JComponent render() {
@@ -130,11 +118,9 @@ public class PropertyEditorIdeComponent implements IdeComponent {
         } else {
             switch (parentProperty.getName()) {
                 case "name":
-                    System.out.println(projectComponent.getName());
                     parentProperty.setValue((Object) projectComponent.getName());
                     break;
                 case "type":
-                    System.out.println(projectComponent.getType());
                     parentProperty.setValue((Object) projectComponent.getType());
                     break;
             }
