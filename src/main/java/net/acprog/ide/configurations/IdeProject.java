@@ -1,11 +1,8 @@
 package net.acprog.ide.configurations;
 
-import net.acprog.builder.project.Project;
 import net.acprog.builder.utils.FileUtils;
 
 import java.io.*;
-import java.nio.charset.Charset;
-import java.util.stream.Collectors;
 
 public class IdeProject {
     private static IdeProject ourInstance = null;
@@ -43,10 +40,11 @@ public class IdeProject {
         try (Writer fw = new BufferedWriter(new FileWriter(source))) {
             fw.write(sourceString);
             fw.close();
-            return true;
         } catch (Exception e) {
             return false;
         }
+        project.saveToFile(new File(projectFolder.getPath() + "\\" + projectFolder.getName() + "-saved.xml"));
+        return true;
     }
 
     public void close() {

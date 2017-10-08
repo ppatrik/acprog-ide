@@ -2,15 +2,15 @@ package net.acprog.ide.gui;
 
 import net.acprog.ide.configurations.IdeProject;
 import net.acprog.ide.gui.components.*;
-import net.acprog.ide.gui.utils.*;
+import net.acprog.ide.gui.utils.ApplicationSplitHorizontalPaneModel;
+import net.acprog.ide.gui.utils.ApplicationSplitVerticalPaneModel;
 import net.acprog.ide.utils.event.EventManager;
 import net.acprog.ide.utils.event.EventType;
+import net.acprog.ide.utils.event.Observer;
 import org.jdesktop.swingx.JXMultiSplitPane;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
 public class MainFrame extends JFrame {
@@ -39,6 +39,8 @@ public class MainFrame extends JFrame {
 
         this.eventManager = new EventManager();
 
+        InitializeEvents();
+
         InitializeMenuBar();
 
         InitializeToolBar();
@@ -53,6 +55,20 @@ public class MainFrame extends JFrame {
 
         verticalPanelModel.setDefaultWeights();
         horizontalPanelModel.setDefaultWeights();
+    }
+
+    public void saveProject(EventType eventType, Object o) {
+        ideProject.save();
+    }
+
+    private void InitializeEvents() {
+        eventManager.registerObserver(EventType.EVENT_PROJECT_SAVE, this::saveProject);
+        eventManager.registerObserver(EventType.EVENT_QUIT, this::closeProject);
+    }
+
+    private void closeProject(EventType eventType, Object o) {
+        // todo opytat sa na ulozenie
+        dispose();
     }
 
     private void InitializeToolBar() {
@@ -124,26 +140,23 @@ public class MainFrame extends JFrame {
 
         // Build IdeProject submenu
         menuItem = new JMenuItem("New project", KeyEvent.VK_N);
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_PROJECT_CREATE));
         menu.add(menuItem);
 
         menuItem = new JMenuItem("Open project", KeyEvent.VK_O);
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_PROJECT_OPEN));
         menu.add(menuItem);
 
         menuItem = new JMenuItem("Save project", KeyEvent.VK_O);
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("Save project");
-                eventManager.callEvent(EventType.EVENT_SAVE);
-                ideProject.save();
-            }
-        });
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_PROJECT_SAVE));
         menu.add(menuItem);
 
         menuItem = new JMenuItem("Preferences", KeyEvent.VK_P);
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_PREFERENCES));
         menu.add(menuItem);
 
         menuItem = new JMenuItem("Quit", KeyEvent.VK_Q);
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_QUIT));
         menu.add(menuItem);
 
         // Build Help menu
