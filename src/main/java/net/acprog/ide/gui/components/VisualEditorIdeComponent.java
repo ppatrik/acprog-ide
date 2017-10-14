@@ -1,6 +1,7 @@
 package net.acprog.ide.gui.components;
 
-import net.acprog.builder.project.Project;
+import net.acprog.ide.configurations.Project;
+import net.acprog.ide.configurations.Component;
 import net.acprog.ide.gui.MainFrame;
 
 import javax.swing.*;
@@ -102,7 +103,7 @@ public class VisualEditorIdeComponent implements IdeComponent {
 
         // vlozenie komponentov do plochy
         Project project = mainFrame.getIdeProject().getProject();
-        for (net.acprog.builder.project.Component component : project.getComponents()) {
+        for (Component component : project.getComponents()) {
             ProjectComponent pc = new ProjectComponent(this, component);
             panel.add(pc);
         }

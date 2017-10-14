@@ -16,7 +16,69 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class Project extends net.acprog.builder.project.Project {
+public class Project {
+
+    protected net.acprog.builder.project.Project parentProject;
+
+    protected List<Component> components = new ArrayList<>();
+
+    public Project(net.acprog.builder.project.Project parentProject) {
+        this.parentProject = parentProject;
+        for (net.acprog.builder.project.Component component: parentProject.getComponents()) {
+            components.add(new Component(component));
+        }
+    }
+
+    public List<Component> getComponents() {
+        return this.components;
+    }
+
+    public void addComponent(Component component)
+    {
+        this.components.add(component);
+        parentProject.getComponents().add(component.getParentComponent());
+    }
+
+    public Map<String, String> getProgramEvents() {
+        return parentProject.getProgramEvents();
+    }
+
+    public List<String> getLibraryImports() {
+        return parentProject.getLibraryImports();
+    }
+
+    public List<net.acprog.builder.project.EepromItem> getEepromItems() {
+        return parentProject.getEepromItems();
+    }
+
+    public String getPlatformName() {
+        return parentProject.getPlatformName();
+    }
+
+    public void setPlatformName(String platformName) {
+        parentProject.setPlatformName(platformName);
+    }
+
+    public int getWatchdogLevel() {
+        return parentProject.getWatchdogLevel();
+    }
+
+    public void setWatchdogLevel(int watchdogLevel) {
+        parentProject.setWatchdogLevel(watchdogLevel);
+    }
+
+    public String getEepromLayoutVersion() {
+        return parentProject.getEepromLayoutVersion();
+    }
+
+    public void setEepromLayoutVersion(String eepromLayoutVersion) {
+        parentProject.setEepromLayoutVersion(eepromLayoutVersion);
+    }
+
+    public static Project loadFromFile(File xmlFile) {
+        net.acprog.builder.project.Project parentProject = net.acprog.builder.project.Project.loadFromFile(xmlFile);
+        return new Project(parentProject);
+    }
 
 
     private Element writeProgramConfiguration(Document doc, Element xmlProgram) throws ConfigurationException {
@@ -69,7 +131,7 @@ public class Project extends net.acprog.builder.project.Project {
     }
 
     private Element writeEepromConfiguration(Document doc, Element xmlEeproms) throws ConfigurationException {
-        if(getEepromItems().size() == 0) {
+        if (getEepromItems().size() == 0) {
             return null;
         }
         if (xmlEeproms != null) {
@@ -82,17 +144,9 @@ public class Project extends net.acprog.builder.project.Project {
         return xmlEeproms;
     }
 
-    public List<Component> getIdeComponents() {
-        List<Component> list = new ArrayList<>(super.getComponents().size());
-        for (net.acprog.builder.project.Component component : super.getComponents()) {
-            list.add(new Component(component));
-        }
-        return list;
-    }
-
     private Element writeComponents(Document doc, Element xmlComponents) {
         if (xmlComponents != null) {
-            for (Component component : getIdeComponents()) {
+            for (Component component : getComponents()) {
                 Element xmlComponent = doc.createElement("component");
                 component.saveToXml(doc, xmlComponent);
                 xmlComponents.appendChild(xmlComponent);
@@ -137,31 +191,9 @@ public class Project extends net.acprog.builder.project.Project {
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
             transformer.transform(source, result);
-
+            return true;
         } catch (Exception e) {
             throw new ConfigurationException("Loading of project configuration failed.", e);
-        }
-        return true;
-    }
-
-    public static Project loadFromFile(File xmlFile) {
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        dbf.setIgnoringComments(true);
-        dbf.setCoalescing(true);
-
-        try {
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            Document doc = db.parse(xmlFile);
-            Project result = new Project();
-            Element xmlRoot = doc.getDocumentElement();
-            if (!"project".equals(xmlRoot.getNodeName())) {
-                throw new ConfigurationException("Root element of a project configuration must be an element with name 'project'.");
-            } else {
-                result.readConfiguration(xmlRoot);
-                return result;
-            }
-        } catch (Exception var6) {
-            throw new ConfigurationException("Loading of project configuration failed.", var6);
         }
     }
 }

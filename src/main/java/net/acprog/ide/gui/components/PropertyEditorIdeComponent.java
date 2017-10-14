@@ -4,7 +4,7 @@ import net.acprog.builder.components.Event;
 import net.acprog.builder.components.PropertyType;
 import net.acprog.builder.modules.ComponentType;
 import net.acprog.builder.modules.Module;
-import net.acprog.builder.project.Component;
+import net.acprog.ide.configurations.Component;
 import net.acprog.ide.gui.MainFrame;
 import net.acprog.ide.utils.ACPModules;
 import net.acprog.ide.utils.event.EventType;
@@ -49,7 +49,7 @@ public class PropertyEditorIdeComponent implements IdeComponent {
 
     private void setModelProperties() {
         propertiesPanel.setModel(null);
-        Module module = ACPModules.getModule(projectComponent);
+        Module module = ACPModules.getModule(projectComponent.getParentComponent());
         if (!(module instanceof ComponentType)) {
             return;
         }
@@ -59,6 +59,19 @@ public class PropertyEditorIdeComponent implements IdeComponent {
         mainProperty.setLabel(module.getName());
         mainProperty.setHint(module.getDescription());
         ComposedProperty.PropertyList mainSubproperties = mainProperty.getSubproperties();
+
+        SimpleProperty propertyName = new SimpleProperty(new StringType(), projectComponent.getName());
+        propertyName.setName("Názov komponentu");
+        propertyName.setLabel("Názov komponentu");
+        propertyName.setHint("Pod týmto názvom budete môcť pristupovať ku komponentu pri programovaní.");
+
+
+        SimpleProperty propertyType = new SimpleProperty(new StringType(), projectComponent.getType());
+        propertyType.setReadOnly(true);
+        propertyType.setName("Typ komponentu");
+        propertyType.setLabel("Typ komponentu");
+        propertyType.setHint("Tu by mohol prist popis tohto typu komponentu.");
+
 
         ComposedProperty propertiesProperty = new ComposedProperty();
         propertiesProperty.setName("properties");
@@ -74,6 +87,8 @@ public class PropertyEditorIdeComponent implements IdeComponent {
         ComposedProperty.PropertyList eventsSubroperties = eventsProperty.getSubproperties();
         initializeEvents(eventsSubroperties, componentType);
 
+        mainSubproperties.add(propertyName);
+        mainSubproperties.add(propertyType);
         mainSubproperties.add(propertiesProperty);
         mainSubproperties.add(eventsProperty);
 

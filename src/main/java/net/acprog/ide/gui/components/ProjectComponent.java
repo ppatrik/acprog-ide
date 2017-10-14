@@ -1,12 +1,14 @@
 package net.acprog.ide.gui.components;
 
-import net.acprog.builder.project.Component;
-import net.acprog.ide.gui.MainFrame;
 import net.acprog.ide.utils.event.EventType;
+import net.acprog.ide.configurations.Component;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class ProjectComponent extends JButton {
 
@@ -80,6 +82,8 @@ public class ProjectComponent extends JButton {
                 Point mouseOnScreen = e.getLocationOnScreen();
                 Point position = new Point(mouseOnScreen.x - parentOnScreen.x -
                         anchorX, mouseOnScreen.y - parentOnScreen.y - anchorY);
+                projectComponent.setLeft(mouseOnScreen.x - parentOnScreen.x - anchorX);
+                projectComponent.setTop(mouseOnScreen.y - parentOnScreen.y - anchorY);
                 setLocation(position);
 
                 //Change Z-Buffer if it is "overbearing"

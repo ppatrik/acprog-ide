@@ -139,4 +139,8 @@ public class Component {
         }
         return xmlProperties;
     }
+
+    public net.acprog.builder.project.Component getParentComponent() {
+        return parentComponent;
+    }
 }

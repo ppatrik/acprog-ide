@@ -6,12 +6,13 @@ import net.acprog.ide.gui.utils.ApplicationSplitHorizontalPaneModel;
 import net.acprog.ide.gui.utils.ApplicationSplitVerticalPaneModel;
 import net.acprog.ide.utils.event.EventManager;
 import net.acprog.ide.utils.event.EventType;
-import net.acprog.ide.utils.event.Observer;
 import org.jdesktop.swingx.JXMultiSplitPane;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
+import java.net.URI;
 
 public class MainFrame extends JFrame {
 
@@ -64,6 +65,50 @@ public class MainFrame extends JFrame {
     private void InitializeEvents() {
         eventManager.registerObserver(EventType.EVENT_PROJECT_SAVE, this::saveProject);
         eventManager.registerObserver(EventType.EVENT_QUIT, this::closeProject);
+
+        eventManager.registerObserver(EventType.EVENT_COMPILE, this::compileProject);
+        eventManager.registerObserver(EventType.EVENT_COMPILE_AND_RUN, this::compileProjectAndRun);
+        eventManager.registerObserver(EventType.EVENT_HELP_ABOUT, this::helpAbout);
+        eventManager.registerObserver(EventType.EVENT_HELP_SLACK, this::helpSlack);
+        eventManager.registerObserver(EventType.EVENT_HELP_UPDATE, this::helpUpdate);
+    }
+
+    private void helpUpdate(EventType eventType, Object o) {
+        try {
+            String s = "https://github.com/ppatrik/acprog-ide/releases";
+            Desktop desktop = Desktop.getDesktop();
+            desktop.browse(URI.create(s));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void helpSlack(EventType eventType, Object o) {
+        try {
+            String s = "https://acprog.slack.com";
+            Desktop desktop = Desktop.getDesktop();
+            desktop.browse(URI.create(s));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void helpAbout(EventType eventType, Object o) {
+        try {
+            String s = "https://github.com/ppatrik/acprog-ide/";
+            Desktop desktop = Desktop.getDesktop();
+            desktop.browse(URI.create(s));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void compileProjectAndRun(EventType eventType, Object o) {
+
+    }
+
+    private void compileProject(EventType eventType, Object o) {
+
     }
 
     private void closeProject(EventType eventType, Object o) {
@@ -166,12 +211,15 @@ public class MainFrame extends JFrame {
 
         // Build Help submenu
         menuItem = new JMenuItem("About us", KeyEvent.VK_A);
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_HELP_ABOUT));
         menu.add(menuItem);
 
         menuItem = new JMenuItem("Check for updates", KeyEvent.VK_U);
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_HELP_UPDATE));
         menu.add(menuItem);
 
         menuItem = new JMenuItem("Slack comunity", KeyEvent.VK_S);
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_HELP_SLACK));
         menu.add(menuItem);
 
         setJMenuBar(menuBar);
