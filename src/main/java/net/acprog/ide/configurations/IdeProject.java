@@ -43,7 +43,7 @@ public class IdeProject {
         } catch (Exception e) {
             return false;
         }
-        project.saveToFile(new File(projectFolder.getPath() + "\\" + projectFolder.getName() + "-saved.xml"));
+        project.saveToFile(new File(projectFolder.getPath() + "\\" + projectFolder.getName() + ".xml"));
         return true;
     }
 

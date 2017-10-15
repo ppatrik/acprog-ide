@@ -53,7 +53,7 @@ public class ProjectComponent extends JButton {
         addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                visualEditorIdeComponent.getMainFrame().getEventManager().callEvent(EventType.EVENT_COMPONENT_SELECTED, (Object) projectComponent);
+                visualEditorIdeComponent.getMainFrame().getEventManager().callEvent(EventType.COMPONENT_SELECTED, (Object) projectComponent);
             }
         });
     }

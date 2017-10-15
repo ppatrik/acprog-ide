@@ -59,18 +59,19 @@ public class MainFrame extends JFrame {
     }
 
     public void saveProject(EventType eventType, Object o) {
+        eventManager.callEvent(EventType.PROJECT_PRE_SAVE);
         ideProject.save();
     }
 
     private void InitializeEvents() {
-        eventManager.registerObserver(EventType.EVENT_PROJECT_SAVE, this::saveProject);
-        eventManager.registerObserver(EventType.EVENT_QUIT, this::closeProject);
+        eventManager.registerObserver(EventType.PROJECT_SAVE, this::saveProject);
+        eventManager.registerObserver(EventType.QUIT, this::closeProject);
 
-        eventManager.registerObserver(EventType.EVENT_COMPILE, this::compileProject);
-        eventManager.registerObserver(EventType.EVENT_COMPILE_AND_RUN, this::compileProjectAndRun);
-        eventManager.registerObserver(EventType.EVENT_HELP_ABOUT, this::helpAbout);
-        eventManager.registerObserver(EventType.EVENT_HELP_SLACK, this::helpSlack);
-        eventManager.registerObserver(EventType.EVENT_HELP_UPDATE, this::helpUpdate);
+        eventManager.registerObserver(EventType.COMPILE, this::compileProject);
+        eventManager.registerObserver(EventType.COMPILE_AND_RUN, this::compileProjectAndRun);
+        eventManager.registerObserver(EventType.HELP_ABOUT, this::helpAbout);
+        eventManager.registerObserver(EventType.HELP_SLACK, this::helpSlack);
+        eventManager.registerObserver(EventType.HELP_UPDATE, this::helpUpdate);
     }
 
     private void helpUpdate(EventType eventType, Object o) {
@@ -112,7 +113,7 @@ public class MainFrame extends JFrame {
     }
 
     private void closeProject(EventType eventType, Object o) {
-        // todo opytat sa na ulozenie
+        eventManager.callEvent(EventType.PROJECT_PRE_SAVE);
         dispose();
     }
 
@@ -185,23 +186,23 @@ public class MainFrame extends JFrame {
 
         // Build IdeProject submenu
         menuItem = new JMenuItem("New project", KeyEvent.VK_N);
-        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_PROJECT_CREATE));
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.PROJECT_CREATE));
         menu.add(menuItem);
 
         menuItem = new JMenuItem("Open project", KeyEvent.VK_O);
-        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_PROJECT_OPEN));
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.PROJECT_OPEN));
         menu.add(menuItem);
 
         menuItem = new JMenuItem("Save project", KeyEvent.VK_O);
-        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_PROJECT_SAVE));
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.PROJECT_SAVE));
         menu.add(menuItem);
 
         menuItem = new JMenuItem("Preferences", KeyEvent.VK_P);
-        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_PREFERENCES));
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.PREFERENCES_OPEN));
         menu.add(menuItem);
 
         menuItem = new JMenuItem("Quit", KeyEvent.VK_Q);
-        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_QUIT));
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.QUIT));
         menu.add(menuItem);
 
         // Build Help menu
@@ -211,15 +212,15 @@ public class MainFrame extends JFrame {
 
         // Build Help submenu
         menuItem = new JMenuItem("About us", KeyEvent.VK_A);
-        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_HELP_ABOUT));
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.HELP_ABOUT));
         menu.add(menuItem);
 
         menuItem = new JMenuItem("Check for updates", KeyEvent.VK_U);
-        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_HELP_UPDATE));
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.HELP_UPDATE));
         menu.add(menuItem);
 
         menuItem = new JMenuItem("Slack comunity", KeyEvent.VK_S);
-        menuItem.addActionListener(e -> eventManager.callEvent(EventType.EVENT_HELP_SLACK));
+        menuItem.addActionListener(e -> eventManager.callEvent(EventType.HELP_SLACK));
         menu.add(menuItem);
 
         setJMenuBar(menuBar);

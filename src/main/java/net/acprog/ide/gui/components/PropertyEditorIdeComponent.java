@@ -34,7 +34,7 @@ public class PropertyEditorIdeComponent implements IdeComponent {
     }
 
     private void addEventListeners() {
-        mainFrame.getEventManager().registerObserver(EventType.EVENT_COMPONENT_SELECTED, new Observer() {
+        mainFrame.getEventManager().registerObserver(EventType.COMPONENT_SELECTED, new Observer() {
             @Override
             public void onEvent(EventType eventType, Object o) {
                 projectComponent = (Component) o;

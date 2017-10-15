@@ -21,7 +21,7 @@ public class EditorIdeComponent implements IdeComponent {
 
         textArea.setText(mainFrame.getIdeProject().getSourceString());
 
-        this.mainFrame.getEventManager().registerObserver(EventType.EVENT_PROJECT_SAVE, new Observer() {
+        this.mainFrame.getEventManager().registerObserver(EventType.PROJECT_PRE_SAVE, new Observer() {
             @Override
             public void onEvent(EventType eventType, Object o) {
                 mainFrame.getIdeProject().setSourceString(textArea.getText());
