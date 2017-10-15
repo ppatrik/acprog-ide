@@ -1,6 +1,7 @@
 package net.acprog.ide.configurations;
 
 import net.acprog.builder.components.ConfigurationException;
+import net.acprog.builder.utils.XmlUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -13,6 +14,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,17 +26,28 @@ public class Project {
 
     public Project(net.acprog.builder.project.Project parentProject) {
         this.parentProject = parentProject;
-        for (net.acprog.builder.project.Component component: parentProject.getComponents()) {
+        for (net.acprog.builder.project.Component component : parentProject.getComponents()) {
             components.add(new Component(component));
         }
     }
+
+    // --------------------------------------------------------------------------------------
+    // GETTERS / SETTERS
+    // --------------------------------------------------------------------------------------
 
     public List<Component> getComponents() {
         return this.components;
     }
 
-    public void addComponent(Component component)
-    {
+    public Map<String, Component> getComponentsMap() {
+        Map<String, Component> map = new HashMap<>();
+        for (Component component : getComponents()) {
+            map.put(component.getName(), component);
+        }
+        return map;
+    }
+
+    public void addComponent(Component component) {
         this.components.add(component);
         parentProject.getComponents().add(component.getParentComponent());
     }
@@ -75,100 +88,53 @@ public class Project {
         parentProject.setEepromLayoutVersion(eepromLayoutVersion);
     }
 
+    // --------------------------------------------------------------------------------------
+    // IDE CONFIGURATION READER
+    // --------------------------------------------------------------------------------------
+
+    private void readConfiguration(Element xmlRoot) {
+        Map<String, Component> componentsMap = getComponentsMap();
+        for (Element xmlGroup : XmlUtils.getChildElements(xmlRoot, "group")) {
+            String type = XmlUtils.getSimpleAttributeValue(xmlGroup, "type", "component");
+            String name = XmlUtils.getSimpleAttributeValue(xmlGroup, "name", null);
+            switch (type) {
+                case "component":
+                    componentsMap.get(name).readFromXml(xmlGroup);
+                    break;
+                case "component-group":
+                    break;
+            }
+        }
+    }
+
     public static Project loadFromFile(File xmlFile) {
         net.acprog.builder.project.Project parentProject = net.acprog.builder.project.Project.loadFromFile(xmlFile);
-        return new Project(parentProject);
-    }
 
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setIgnoringComments(true);
+        dbf.setCoalescing(true);
 
-    private Element writeProgramConfiguration(Document doc, Element xmlProgram) throws ConfigurationException {
-        boolean empty = true;
-        if (xmlProgram != null) {
-            if (this.getWatchdogLevel() != -1) { // todo magicka konstanta
-                xmlProgram.setAttribute("watchdog-level", Integer.toString(getWatchdogLevel()));
-                empty = false;
+        try {
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document doc = db.parse(xmlFile);
+            Project result = new Project(parentProject);
+            Element xmlRoot = doc.getDocumentElement();
+            Element ideXmlRoot = XmlUtils.getChildElement(xmlRoot, "ide");
+
+            if (ideXmlRoot != null) {
+                result.readConfiguration(ideXmlRoot);
+            } else {
+                // todo: urobit default konfiguraciu!
             }
-            Element xmlEvents = writeEventProgramConfiguration(doc, doc.createElement("events"));
-            if (xmlEvents != null) {
-                xmlProgram.appendChild(xmlEvents);
-                empty = false;
-            }
-            Element xmlImports = writeImportsProgramConfiguration(doc, doc.createElement("imports"));
-            if (xmlImports != null) {
-                xmlProgram.appendChild(xmlImports);
-                empty = false;
-            }
+            return result;
+        } catch (Exception var6) {
+            throw new ConfigurationException("Loading of project configuration failed.", var6);
         }
-        if (empty) {
-            return null;
-        }
-        return xmlProgram;
     }
 
-    private Element writeImportsProgramConfiguration(Document doc, Element xmlImports) {
-        if (getLibraryImports().size() == 0) {
-            return null;
-        }
-        for (String libraryImport : getLibraryImports()) {
-            Element xmlImport = doc.createElement("library");
-            xmlImport.setTextContent(libraryImport);
-            xmlImports.appendChild(xmlImport);
-        }
-        return xmlImports;
-    }
-
-    private Element writeEventProgramConfiguration(Document doc, Element xmlEvents) {
-        if (getProgramEvents().size() == 0) {
-            return null;
-        }
-        for (Map.Entry<String, String> entry : getProgramEvents().entrySet()) {
-            Element xmlEvent = doc.createElement("event");
-            xmlEvent.setAttribute("name", entry.getKey());
-            xmlEvent.setTextContent(entry.getValue());
-            xmlEvents.appendChild(xmlEvent);
-        }
-        return xmlEvents;
-    }
-
-    private Element writeEepromConfiguration(Document doc, Element xmlEeproms) throws ConfigurationException {
-        if (getEepromItems().size() == 0) {
-            return null;
-        }
-        if (xmlEeproms != null) {
-            for (net.acprog.builder.project.EepromItem eepromItem : getEepromItems()) {
-                EepromItem eepromItemLocal = new EepromItem(eepromItem);
-                Element xmlEeprom = eepromItemLocal.writeToXml(doc);
-                xmlEeproms.appendChild(xmlEeprom);
-            }
-        }
-        return xmlEeproms;
-    }
-
-    private Element writeComponents(Document doc, Element xmlComponents) {
-        if (xmlComponents != null) {
-            for (Component component : getComponents()) {
-                Element xmlComponent = doc.createElement("component");
-                component.saveToXml(doc, xmlComponent);
-                xmlComponents.appendChild(xmlComponent);
-            }
-        }
-        return xmlComponents;
-    }
-
-    public Element writeConfiguration(Document doc, Element xmlProject) throws ConfigurationException {
-        xmlProject.setAttribute("platform", this.getPlatformName());
-
-        Element xmlProgram = writeProgramConfiguration(doc, doc.createElement("program"));
-        if (xmlProgram != null) {
-            xmlProject.appendChild(xmlProgram);
-        }
-        Element xmlEeprom = writeEepromConfiguration(doc, doc.createElement("eeprom"));
-        if (xmlEeprom != null) {
-            xmlProject.appendChild(xmlEeprom);
-        }
-        xmlProject.appendChild(writeComponents(doc, doc.createElement("components")));
-        return xmlProject;
-    }
+    // --------------------------------------------------------------------------------------
+    // IDE CONFIGURATION WRITER
+    // --------------------------------------------------------------------------------------
 
     public boolean saveToFile(File xmlFile) {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -180,8 +146,11 @@ public class Project {
             Document doc = db.newDocument();
 
             // Write actual configuration to root node
-            Element xmlRoot = writeConfiguration(doc, doc.createElement("project"));
+            Element xmlRoot = parentProject.writeConfiguration(doc.createElement("project"));
             doc.appendChild(xmlRoot);
+
+            Element xmlIdeRoot = writeIdeConfiguration(doc.createElement("ide"));
+            xmlRoot.appendChild(xmlIdeRoot);
 
             // Save configuration to XML file
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -196,4 +165,16 @@ public class Project {
             throw new ConfigurationException("Loading of project configuration failed.", e);
         }
     }
+
+    private Element writeIdeConfiguration(Element xmlIdeElement) {
+        Document doc = xmlIdeElement.getOwnerDocument();
+        int output = 0;
+        for (Component component : getComponents()) {
+            Element el = component.writeIdeConfiguration(doc.createElement("group"));
+            xmlIdeElement.appendChild(el);
+            output++;
+        }
+        return output == 0 ? null : xmlIdeElement;
+    }
+
 }

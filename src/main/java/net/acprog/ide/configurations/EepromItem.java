@@ -1,8 +1,5 @@
 package net.acprog.ide.configurations;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 public class EepromItem {
     private net.acprog.builder.project.EepromItem parentEepromItem;
 
@@ -64,13 +61,6 @@ public class EepromItem {
 
     public int getLengthOfArray() {
         return parentEepromItem.getLengthOfArray();
-    }
-
-    public Element writeToXml(Document doc)
-    {
-        Element xmlEepromItem = doc.createElement(getLengthOfArray() == -1 ? "variable" : "array");
-
-        return null;
     }
 
 }

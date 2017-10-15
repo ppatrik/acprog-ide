@@ -1,13 +1,18 @@
 package net.acprog.ide.configurations;
 
+import net.acprog.builder.utils.XmlUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 
 import java.util.Map;
 
 public class Component {
     private net.acprog.builder.project.Component parentComponent;
+
+    private int left;
+    private int top;
+    private int width;
+    private int height;
 
     public Component(net.acprog.builder.project.Component parentComponent) {
         this.parentComponent = parentComponent;
@@ -50,97 +55,91 @@ public class Component {
     }
 
     public int getLeft() {
-        return parentComponent.getLeft();
+        return left;
     }
 
     public void setLeft(int left) {
-        parentComponent.setLeft(left);
+        this.left = left;
     }
 
     public int getTop() {
-        return parentComponent.getTop();
+        return top;
     }
 
     public void setTop(int top) {
-        parentComponent.setTop(top);
+        this.top = top;
     }
 
     public int getWidth() {
-        return parentComponent.getWidth();
+        return width;
     }
 
     public void setWidth(int width) {
-        parentComponent.setWidth(width);
+        this.width = width;
     }
 
     public int getHeight() {
-        return parentComponent.getHeight();
+        return height;
     }
 
     public void setHeight(int height) {
-        parentComponent.setHeight(height);
+        this.height = height;
     }
 
     public void readFromXml(Element xmlElement) {
-        parentComponent.readFromXml(xmlElement);
+        for (Element element : XmlUtils.getChildElements(xmlElement, "property")) {
+            String name = XmlUtils.getSimpleAttributeValue(element, "key", null);
+            switch (name) {
+                case "top":
+                    setTop(Integer.parseInt(XmlUtils.getElementValue(element, "0").trim()));
+                    break;
+                case "left":
+                    setLeft(Integer.parseInt(XmlUtils.getElementValue(element, "0").trim()));
+                    break;
+                case "width":
+                    setWidth(Integer.parseInt(XmlUtils.getElementValue(element, "100").trim()));
+                    break;
+                case "height":
+                    setHeight(Integer.parseInt(XmlUtils.getElementValue(element, "30").trim()));
+                    break;
+            }
+        }
     }
 
     public void saveToXml(Document doc, Element xmlComponent) {
-        xmlComponent.setAttribute("top", Integer.toString(getTop()));
-        xmlComponent.setAttribute("left", Integer.toString(getLeft()));
-        xmlComponent.setAttribute("width", Integer.toString(getWidth()));
-        xmlComponent.setAttribute("height", Integer.toString(getHeight()));
-
-        Element xmlName = doc.createElement("name");
-        xmlName.setTextContent(getName());
-        xmlComponent.appendChild(xmlName);
-        Element xmlType = doc.createElement("type");
-        xmlType.setTextContent(getType());
-        xmlComponent.appendChild(xmlType);
-        if (getDescription() != null && getDescription().length() > 0) {
-            Element xmlDescription = doc.createElement("description");
-            xmlDescription.setTextContent(getDescription());
-            xmlComponent.appendChild(xmlDescription);
-        }
-
-        Element xmlProperties = writeProperties(doc, doc.createElement("properties"));
-        if(xmlProperties != null) {
-            xmlComponent.appendChild(xmlProperties);
-        }
-        Element xmlEvents = writeEvents(doc, doc.createElement("events"));
-        if(xmlEvents != null) {
-            xmlComponent.appendChild(xmlEvents);
-        }
-
-    }
-
-    private Element writeEvents(Document doc, Element xmlEvents) {
-        if (getEvents().size() == 0) {
-            return null;
-        }
-        for (Map.Entry<String, String> entry : getEvents().entrySet()) {
-            Element xmlEvent = doc.createElement("event");
-            xmlEvent.setAttribute("name", entry.getKey());
-            xmlEvent.setTextContent(entry.getValue());
-            xmlEvents.appendChild(xmlEvent);
-        }
-        return xmlEvents;
-    }
-
-    private Element writeProperties(Document doc, Element xmlProperties) {
-        if (getProperties().size() == 0) {
-            return null;
-        }
-        for (Map.Entry<String, String> entry : getProperties().entrySet()) {
-            Element xmlProperty = doc.createElement("property");
-            xmlProperty.setAttribute("name", entry.getKey());
-            xmlProperty.setTextContent(entry.getValue());
-            xmlProperties.appendChild(xmlProperty);
-        }
-        return xmlProperties;
+        parentComponent.writeToXml(xmlComponent);
     }
 
     public net.acprog.builder.project.Component getParentComponent() {
         return parentComponent;
+    }
+
+    public Element writeIdeConfiguration(Element xmlGroup) {
+        Element el;
+        Document doc = xmlGroup.getOwnerDocument();
+        xmlGroup.setAttribute("name", getName());
+        xmlGroup.setAttribute("type", "component");
+
+        el = doc.createElement("property");
+        el.setAttribute("key", "top");
+        el.setTextContent(Integer.toString(getTop()));
+        xmlGroup.appendChild(el);
+
+        el = doc.createElement("property");
+        el.setAttribute("key", "left");
+        el.setTextContent(Integer.toString(getLeft()));
+        xmlGroup.appendChild(el);
+
+        el = doc.createElement("property");
+        el.setAttribute("key", "width");
+        el.setTextContent(Integer.toString(getWidth()));
+        xmlGroup.appendChild(el);
+
+        el = doc.createElement("property");
+        el.setAttribute("key", "height");
+        el.setTextContent(Integer.toString(getHeight()));
+        xmlGroup.appendChild(el);
+
+        return xmlGroup;
     }
 }

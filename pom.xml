@@ -30,8 +30,8 @@
         <dependency>
             <groupId>net.acprog</groupId>
             <artifactId>builder</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <systemPath>${project.basedir}/libs/builder-0.0.1-SNAPSHOT-jar-with-dependencies.jar</systemPath>
+            <version>0.0.2</version>
+            <systemPath>${project.basedir}/libs/builder-0.0.2-jar-with-dependencies.jar</systemPath>
             <scope>system</scope>
         </dependency>
 
