@@ -4,7 +4,6 @@ import bibliothek.gui.dock.common.CControl;
 import bibliothek.gui.dock.common.CLocation;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
-import bibliothek.gui.dock.common.theme.ThemeMap;
 import net.acprog.ide.configurations.IdeProject;
 import net.acprog.ide.gui.components.*;
 import net.acprog.ide.utils.event.EventManager;

@@ -2,14 +2,16 @@ package net.acprog.ide.gui.components;
 
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
-import bibliothek.gui.dock.common.intern.CDockable;
 import net.acprog.builder.modules.Module;
 import net.acprog.ide.configurations.IdeSettings;
 import net.acprog.ide.gui.MainFrame;
 import net.acprog.ide.utils.ACPModules;
+import net.acprog.ide.utils.event.EventType;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Collection;
 
@@ -28,13 +30,12 @@ public class ToolBoxIdeComponent implements IdeComponent {
         ACPModules acpModules = new ACPModules(acpModulesDirectory);
         Collection<Module> allModules = acpModules.scanDirectory();
 
-        JButton button;
+        ToolBoxComponent moduleButton;
         MigLayout migLayout = new MigLayout();
         JPanel buttonGroup = new JPanel(migLayout);
         for (Module module : allModules) {
-            button = new JButton();
-            button.setText(module.getName());
-            buttonGroup.add(button, "wrap");
+            moduleButton = new ToolBoxComponent(this, module);
+            buttonGroup.add(moduleButton, "wrap");
         }
 
         scrollPane = new JScrollPane(buttonGroup);
@@ -46,8 +47,13 @@ public class ToolBoxIdeComponent implements IdeComponent {
     public JComponent render() {
         return scrollPane;
     }
+
     @Override
     public SingleCDockable dockable() {
         return new DefaultSingleCDockable(getClass().toString(), "Toolbox", render());
+    }
+
+    public MainFrame getMainFrame() {
+        return mainFrame;
     }
 }
