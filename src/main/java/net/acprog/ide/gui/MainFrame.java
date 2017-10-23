@@ -1,16 +1,19 @@
 package net.acprog.ide.gui;
 
+import bibliothek.gui.dock.common.CControl;
+import bibliothek.gui.dock.common.CLocation;
+import bibliothek.gui.dock.common.DefaultSingleCDockable;
+import bibliothek.gui.dock.common.SingleCDockable;
+import bibliothek.gui.dock.common.theme.ThemeMap;
 import net.acprog.ide.configurations.IdeProject;
 import net.acprog.ide.gui.components.*;
-import net.acprog.ide.gui.utils.ApplicationSplitHorizontalPaneModel;
-import net.acprog.ide.gui.utils.ApplicationSplitVerticalPaneModel;
 import net.acprog.ide.utils.event.EventManager;
 import net.acprog.ide.utils.event.EventType;
-import org.jdesktop.swingx.JXMultiSplitPane;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
@@ -22,17 +25,11 @@ public class MainFrame extends JFrame {
 
     protected JPanel panel;
 
-    protected JXMultiSplitPane verticalPanel;
-
-    protected ApplicationSplitVerticalPaneModel verticalPanelModel;
-
-    protected JXMultiSplitPane horizontalPanel;
-
-    protected ApplicationSplitHorizontalPaneModel horizontalPanelModel;
-
     protected JMenuBar menuBar;
 
     protected JToolBar toolBar;
+
+    protected CControl control;
 
     public MainFrame(IdeProject ideProject) {
 
@@ -53,14 +50,6 @@ public class MainFrame extends JFrame {
         //setPreferredSize(new Dimension(1024, 800));
         setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
-
-        verticalPanelModel.setDefaultWeights();
-        horizontalPanelModel.setDefaultWeights();
-    }
-
-    public void saveProject(EventType eventType, Object o) {
-        eventManager.callEvent(EventType.PROJECT_PRE_SAVE);
-        ideProject.save();
     }
 
     private void InitializeEvents() {
@@ -72,6 +61,21 @@ public class MainFrame extends JFrame {
         eventManager.registerObserver(EventType.HELP_ABOUT, this::helpAbout);
         eventManager.registerObserver(EventType.HELP_SLACK, this::helpSlack);
         eventManager.registerObserver(EventType.HELP_UPDATE, this::helpUpdate);
+    }
+
+    private void saveProject(EventType eventType, Object o) {
+        eventManager.callEvent(EventType.PROJECT_PRE_SAVE);
+        ideProject.save();
+    }
+
+    private void closeProject(EventType eventType, Object o) {
+        eventManager.callEvent(EventType.PROJECT_PRE_SAVE);
+        try {
+            control.writeXML(new File("workspace.xml"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        dispose();
     }
 
     private void helpUpdate(EventType eventType, Object o) {
@@ -104,17 +108,16 @@ public class MainFrame extends JFrame {
         }
     }
 
-    private void compileProjectAndRun(EventType eventType, Object o) {
-
-    }
-
     private void compileProject(EventType eventType, Object o) {
-
+        eventManager.callEvent(EventType.PROJECT_PRE_SAVE);
+        ideProject.save();
+        ideProject.build(false);
+        ideProject.verify();
     }
 
-    private void closeProject(EventType eventType, Object o) {
-        eventManager.callEvent(EventType.PROJECT_PRE_SAVE);
-        dispose();
+    private void compileProjectAndRun(EventType eventType, Object o) {
+        compileProject(eventType, o);
+        // TODO: spustenie projektu na arduine
     }
 
     private void InitializeToolBar() {
@@ -125,13 +128,22 @@ public class MainFrame extends JFrame {
         //first button
         button = new JButton();
         button.setText("Compile");
+        button.addActionListener(e -> eventManager.callEvent(EventType.COMPILE));
         toolBar.add(button);
 
         //second button
         button = new JButton();
         button.setText("Compile & run");
+        button.addActionListener(e -> eventManager.callEvent(EventType.COMPILE_AND_RUN));
         toolBar.add(button);
 
+    }
+
+    public static SingleCDockable create(String title, Color color) {
+        JPanel bg = new JPanel();
+        bg.setOpaque(true);
+        bg.setBackground(color);
+        return new DefaultSingleCDockable(title, title, bg);
     }
 
     private void InitializeLayout() {
@@ -139,38 +151,50 @@ public class MainFrame extends JFrame {
 
         panel.add(toolBar, BorderLayout.PAGE_START);
 
+        control = new CControl(this);
+        panel.add(control.getContentArea(), BorderLayout.CENTER);
+
         IdeComponent c;
+        SingleCDockable dockable;
 
-        verticalPanel = new JXMultiSplitPane();
-        verticalPanelModel = new ApplicationSplitVerticalPaneModel();
-        verticalPanel.setModel(verticalPanelModel);
-
-        horizontalPanel = new JXMultiSplitPane();
-        horizontalPanelModel = new ApplicationSplitHorizontalPaneModel();
-        horizontalPanel.setModel(horizontalPanelModel);
-
-        // componenty
+        // components
         c = new ToolBoxIdeComponent(this);
-        horizontalPanel.add(c.render(), ApplicationSplitHorizontalPaneModel.P1);
+        dockable = c.dockable();
+        control.addDockable(dockable);
+        dockable.setLocation(CLocation.base().normalWest(0.25));
+        dockable.setVisible(true);
 
         c = new VisualEditorIdeComponent(this);
-        horizontalPanel.add(c.render(), ApplicationSplitHorizontalPaneModel.P2);
+        dockable = c.dockable();
+        control.addDockable(dockable);
+        dockable.setLocation(CLocation.base().normalWest(0.25));
+        dockable.setVisible(true);
 
         c = new EditorIdeComponent(this);
-        horizontalPanel.add(c.render(), ApplicationSplitHorizontalPaneModel.P3);
+        dockable = c.dockable();
+        control.addDockable(dockable);
+        dockable.setLocation(CLocation.base().normalEast(0.25));
+        dockable.setVisible(true);
 
         c = new PropertyEditorIdeComponent(this);
-        horizontalPanel.add(c.render(), ApplicationSplitHorizontalPaneModel.P4);
+        dockable = c.dockable();
+        control.addDockable(dockable);
+        dockable.setLocation(CLocation.base().normalEast(0.25));
+        dockable.setVisible(true);
 
-        verticalPanel.add(horizontalPanel, ApplicationSplitVerticalPaneModel.P1);
-
-        // konzola
         c = new ConsoleIdeComponent(this);
-        verticalPanel.add(c.render(), ApplicationSplitVerticalPaneModel.P2);
-
-        panel.add(verticalPanel, BorderLayout.CENTER);
+        dockable = c.dockable();
+        control.addDockable(dockable);
+        dockable.setLocation(CLocation.base().normalSouth(0.1));
+        dockable.setVisible(true);
 
         setContentPane(panel);
+
+        try {
+            control.readXML(new File("workspace.xml"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void InitializeMenuBar() {

@@ -1,16 +1,16 @@
 package net.acprog.ide.gui.components;
 
-import net.acprog.ide.utils.event.EventType;
 import net.acprog.ide.configurations.Component;
+import net.acprog.ide.utils.event.EventType;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 
-public class ProjectComponent extends JButton {
+public class ProjectComponent extends JButton implements MouseMotionListener, ActionListener {
 
     protected Component projectComponent;
     protected VisualEditorIdeComponent visualEditorIdeComponent;
@@ -44,55 +44,43 @@ public class ProjectComponent extends JButton {
 
         updateUI();
 
-        addDragListeners();
+        addMouseMotionListener(this);
 
-        addClickListeners();
+        addActionListener(this);
     }
 
-    private void addClickListeners() {
-        addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                visualEditorIdeComponent.getMainFrame().getEventManager().callEvent(EventType.COMPONENT_SELECTED, (Object) projectComponent);
-            }
-        });
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        visualEditorIdeComponent.getMainFrame().getEventManager().callEvent(EventType.COMPONENT_SELECTED, (Object) projectComponent);
     }
 
-    /**
-     * Add Mouse Motion Listener with drag function
-     */
-    private void addDragListeners() {
-        /** This handle is a reference to THIS because in next Mouse Adapter
-         "this" is not allowed */
-        final ProjectComponent handle = this;
-        addMouseMotionListener(new MouseAdapter() {
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        anchorPoint = e.getPoint();
+        setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    }
 
-            @Override
-            public void mouseMoved(MouseEvent e) {
-                anchorPoint = e.getPoint();
-                setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            }
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        int anchorX = anchorPoint.x;
+        int anchorY = anchorPoint.y;
+        java.awt.Component parent = getParent();
 
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                int anchorX = anchorPoint.x;
-                int anchorY = anchorPoint.y;
-
-                Point parentOnScreen = getParent().getLocationOnScreen();
-                Point mouseOnScreen = e.getLocationOnScreen();
-                Point position = new Point(mouseOnScreen.x - parentOnScreen.x -
-                        anchorX, mouseOnScreen.y - parentOnScreen.y - anchorY);
-                projectComponent.setLeft(mouseOnScreen.x - parentOnScreen.x - anchorX);
-                projectComponent.setTop(mouseOnScreen.y - parentOnScreen.y - anchorY);
-                setLocation(position);
-
-                //Change Z-Buffer if it is "overbearing"
-                if (overbearing) {
-                    getParent().setComponentZOrder(handle, 0);
-                    repaint();
-                }
-            }
-        });
+        Point parentOnScreen = getParent().getLocationOnScreen();
+        Point mouseOnScreen = e.getLocationOnScreen();
+        Point position = new Point(mouseOnScreen.x - parentOnScreen.x - anchorX, mouseOnScreen.y - parentOnScreen.y - anchorY);
+        position.x = Math.max(position.x, 0);
+        position.y = Math.max(position.y, 0);
+        projectComponent.setLeft(position.x);
+        projectComponent.setTop(position.y);
+        setLocation(position);
+        Dimension minSize = parent.getMinimumSize();
+        int width = Math.max(minSize.width,
+                position.x + getBounds().width);
+        int height = Math.max(minSize.height,
+                position.y + getBounds().height);
+        parent.setPreferredSize(new Dimension(width, height));
+        parent.revalidate();
     }
 
     @Override

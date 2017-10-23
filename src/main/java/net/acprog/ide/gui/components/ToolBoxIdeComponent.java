@@ -1,5 +1,8 @@
 package net.acprog.ide.gui.components;
 
+import bibliothek.gui.dock.common.DefaultSingleCDockable;
+import bibliothek.gui.dock.common.SingleCDockable;
+import bibliothek.gui.dock.common.intern.CDockable;
 import net.acprog.builder.modules.Module;
 import net.acprog.ide.configurations.IdeSettings;
 import net.acprog.ide.gui.MainFrame;
@@ -42,5 +45,9 @@ public class ToolBoxIdeComponent implements IdeComponent {
 
     public JComponent render() {
         return scrollPane;
+    }
+    @Override
+    public SingleCDockable dockable() {
+        return new DefaultSingleCDockable(getClass().toString(), "Toolbox", render());
     }
 }

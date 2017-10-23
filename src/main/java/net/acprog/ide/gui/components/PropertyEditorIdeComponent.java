@@ -1,5 +1,8 @@
 package net.acprog.ide.gui.components;
 
+import bibliothek.gui.dock.common.DefaultSingleCDockable;
+import bibliothek.gui.dock.common.SingleCDockable;
+import bibliothek.gui.dock.common.intern.CDockable;
 import net.acprog.builder.components.Event;
 import net.acprog.builder.components.PropertyType;
 import net.acprog.builder.modules.ComponentType;
@@ -122,6 +125,10 @@ public class PropertyEditorIdeComponent implements IdeComponent {
 
     public JComponent render() {
         return propertiesPanel;
+    }
+    @Override
+    public SingleCDockable dockable() {
+        return new DefaultSingleCDockable(getClass().toString(), "Property editor", render());
     }
 
     public void setPropertiesForEditor(Property parentProperty) {

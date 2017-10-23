@@ -1,5 +1,8 @@
 package net.acprog.ide.gui.components;
 
+import bibliothek.gui.dock.common.DefaultSingleCDockable;
+import bibliothek.gui.dock.common.SingleCDockable;
+import bibliothek.gui.dock.common.intern.CDockable;
 import net.acprog.ide.gui.MainFrame;
 import net.acprog.ide.utils.event.EventType;
 import net.acprog.ide.utils.event.Observer;
@@ -39,5 +42,9 @@ public class EditorIdeComponent implements IdeComponent {
 
     public JComponent render() {
         return sp;
+    }
+    @Override
+    public SingleCDockable dockable() {
+        return new DefaultSingleCDockable(getClass().toString(), "Editor", render());
     }
 }
