@@ -2,7 +2,6 @@ package net.acprog.ide.gui.components;
 
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
-import bibliothek.gui.dock.common.intern.CDockable;
 import net.acprog.builder.components.Event;
 import net.acprog.builder.components.PropertyType;
 import net.acprog.builder.modules.ComponentType;
@@ -11,11 +10,7 @@ import net.acprog.ide.configurations.Component;
 import net.acprog.ide.gui.MainFrame;
 import net.acprog.ide.utils.ACPModules;
 import net.acprog.ide.utils.event.EventType;
-import net.acprog.ide.utils.event.Observer;
-import sk.gbox.swing.propertiespanel.ComposedProperty;
-import sk.gbox.swing.propertiespanel.PropertiesPanel;
-import sk.gbox.swing.propertiespanel.Property;
-import sk.gbox.swing.propertiespanel.SimpleProperty;
+import sk.gbox.swing.propertiespanel.*;
 import sk.gbox.swing.propertiespanel.types.StringType;
 
 import javax.swing.*;
@@ -36,14 +31,13 @@ public class PropertyEditorIdeComponent implements IdeComponent {
         addEventListeners();
     }
 
+    public void onComponentSelected(EventType eventType, Object o) {
+        projectComponent = (Component) o;
+        setModelProperties();
+    }
+
     private void addEventListeners() {
-        mainFrame.getEventManager().registerObserver(EventType.COMPONENT_SELECTED, new Observer() {
-            @Override
-            public void onEvent(EventType eventType, Object o) {
-                projectComponent = (Component) o;
-                setModelProperties();
-            }
-        });
+        mainFrame.getEventManager().registerObserver(EventType.COMPONENT_SELECTED, this::onComponentSelected);
     }
 
     private void InitializeComponents() {
@@ -64,6 +58,23 @@ public class PropertyEditorIdeComponent implements IdeComponent {
         ComposedProperty.PropertyList mainSubproperties = mainProperty.getSubproperties();
 
         SimpleProperty propertyName = new SimpleProperty(new StringType(), projectComponent.getName());
+        propertyName.addPropertyListener(new PropertyListener() {
+            @Override
+            public void propertyChanged(Property property) {
+
+            }
+
+            @Override
+            public void propertyValueChanged(Property property) {
+                projectComponent.setName((String) property.getValue());
+                mainFrame.getEventManager().callEvent(EventType.VISUAL_EDITOR_UPDATEUI);
+            }
+
+            @Override
+            public void subpropertyListChanged(ComposedProperty composedProperty) {
+
+            }
+        });
         propertyName.setName("Názov komponentu");
         propertyName.setLabel("Názov komponentu");
         propertyName.setHint("Pod týmto názvom budete môcť pristupovať ku komponentu pri programovaní.");
@@ -107,6 +118,22 @@ public class PropertyEditorIdeComponent implements IdeComponent {
             prop.setName(name);
             prop.setLabel(name);
             prop.setValue(projectComponent.getProperties().get(name));
+            prop.addPropertyListener(new PropertyListener() {
+                @Override
+                public void propertyChanged(Property property) {
+
+                }
+
+                @Override
+                public void propertyValueChanged(Property property) {
+                    projectComponent.getProperties().put(name, (String) property.getValue());
+                }
+
+                @Override
+                public void subpropertyListChanged(ComposedProperty composedProperty) {
+
+                }
+            });
             subproperties.add(prop);
         });
     }
@@ -119,6 +146,22 @@ public class PropertyEditorIdeComponent implements IdeComponent {
             prop.setLabel(name);
             prop.setHint(property.getDescription());
             prop.setValue(projectComponent.getEvents().get(name));
+            prop.addPropertyListener(new PropertyListener() {
+                @Override
+                public void propertyChanged(Property property) {
+
+                }
+
+                @Override
+                public void propertyValueChanged(Property property) {
+                    projectComponent.getEvents().put(name, (String) property.getValue());
+                }
+
+                @Override
+                public void subpropertyListChanged(ComposedProperty composedProperty) {
+
+                }
+            });
             subproperties.add(prop);
         });
     }
@@ -126,6 +169,7 @@ public class PropertyEditorIdeComponent implements IdeComponent {
     public JComponent render() {
         return propertiesPanel;
     }
+
     @Override
     public SingleCDockable dockable() {
         return new DefaultSingleCDockable(getClass().toString(), "Property editor", render());

@@ -13,5 +13,5 @@ public enum EventType {
     HELP_ABOUT,
     HELP_UPDATE,
     HELP_SLACK,
-    QUIT
+    VISUAL_EDITOR_UPDATEUI, QUIT
 }

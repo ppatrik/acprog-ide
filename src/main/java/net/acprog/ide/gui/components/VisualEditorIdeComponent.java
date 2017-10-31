@@ -66,6 +66,8 @@ public class VisualEditorIdeComponent implements IdeComponent {
         project.addComponent(myComponent);
         scrollPane.add(myComponent);
         scrollPane.updateUI();
+
+        getMainFrame().getEventManager().registerObserver(EventType.VISUAL_EDITOR_UPDATEUI, (eventType1, o1) -> scrollPane.updateUI());
     }
 
     private void InitializeComponents() {
