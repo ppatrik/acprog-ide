@@ -6,6 +6,8 @@ import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
 import net.acprog.ide.configurations.IdeProject;
 import net.acprog.ide.gui.components.*;
+import net.acprog.ide.gui.utils.ConsoleIde;
+import net.acprog.ide.gui.utils.ConsoleInterface;
 import net.acprog.ide.utils.event.EventManager;
 import net.acprog.ide.utils.event.EventType;
 
@@ -17,6 +19,8 @@ import java.io.IOException;
 import java.net.URI;
 
 public class MainFrame extends JFrame {
+
+    public static MainFrame instance;
 
     private final IdeProject ideProject;
 
@@ -30,7 +34,10 @@ public class MainFrame extends JFrame {
 
     protected CControl control;
 
+    public ConsoleIdeComponent console;
+
     public MainFrame(IdeProject ideProject) {
+        instance = this;
 
         this.ideProject = ideProject;
 
@@ -60,11 +67,18 @@ public class MainFrame extends JFrame {
         eventManager.registerObserver(EventType.HELP_ABOUT, this::helpAbout);
         eventManager.registerObserver(EventType.HELP_SLACK, this::helpSlack);
         eventManager.registerObserver(EventType.HELP_UPDATE, this::helpUpdate);
+        eventManager.registerObserver(EventType.PREFERENCES_OPEN, this::openPreferences);
+    }
+
+    private void openPreferences(EventType eventType, Object o) {
+        JDialog frame = new PreferenciesFrame();
+        frame.pack();
+        frame.setVisible(true);
     }
 
     private void saveProject(EventType eventType, Object o) {
         eventManager.callEvent(EventType.PROJECT_PRE_SAVE);
-        ideProject.save();
+        ideProject.save(ConsoleIde.instance);
     }
 
     private void closeProject(EventType eventType, Object o) {
@@ -109,9 +123,13 @@ public class MainFrame extends JFrame {
 
     private void compileProject(EventType eventType, Object o) {
         eventManager.callEvent(EventType.PROJECT_PRE_SAVE);
-        ideProject.save();
-        ideProject.build(false);
-        ideProject.verify();
+        new Thread(() -> {
+            ConsoleInterface console = ConsoleIde.instance;
+            ideProject.save(console);
+            ideProject.build(console, false);
+            ideProject.verify(console);
+            console.println("All tasks finished successfully\n");
+        }).start();
     }
 
     private void compileProjectAndRun(EventType eventType, Object o) {
@@ -186,6 +204,7 @@ public class MainFrame extends JFrame {
         control.addDockable(dockable);
         dockable.setLocation(CLocation.base().normalSouth(0.1));
         dockable.setVisible(true);
+        console = (ConsoleIdeComponent) c;
 
         setContentPane(panel);
 

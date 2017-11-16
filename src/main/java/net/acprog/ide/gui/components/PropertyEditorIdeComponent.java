@@ -11,6 +11,8 @@ import net.acprog.ide.gui.MainFrame;
 import net.acprog.ide.utils.ACPModules;
 import net.acprog.ide.utils.event.EventType;
 import sk.gbox.swing.propertiespanel.*;
+import sk.gbox.swing.propertiespanel.types.BooleanType;
+import sk.gbox.swing.propertiespanel.types.IntegerType;
 import sk.gbox.swing.propertiespanel.types.StringType;
 
 import javax.swing.*;
@@ -111,14 +113,37 @@ public class PropertyEditorIdeComponent implements IdeComponent {
         propertiesPanel.setModel(mainProperty);
     }
 
+    private static SimpleProperty createSimpleProperty(PropertyType propertyType) {
+        if ("bool".equals(propertyType.getType())) {
+            return new SimpleProperty(new BooleanType(), false);
+        }
+        if ("unsigned long".equals(propertyType.getType())) {
+            return new SimpleProperty(new IntegerType(0, Long.MAX_VALUE, true), null);
+        }
+        if ("pin".equals(propertyType.getType())) {
+            return new SimpleProperty(new IntegerType(0, 50, true), null);
+        }
+        return new SimpleProperty(new StringType(), "");
+    }
+
+    private static void setPropertyValue(PropertyType propertyType, Property property, String value) {
+        if ("bool".equals(propertyType.getType())) {
+            if (value != null) {
+                property.setValue(value.trim().toLowerCase().equals("true"));
+            }
+            return;
+        }
+        property.setValue(value);
+    }
+
     private void initializeProperties(ComposedProperty.PropertyList subproperties, ComponentType componentType) {
         Map<String, PropertyType> properties = componentType.getProperties();
-        properties.forEach((name, property) -> {
-            Property prop = new SimpleProperty(new StringType(), "");
-            prop.setName(name);
-            prop.setLabel(name);
-            prop.setValue(projectComponent.getProperties().get(name));
-            prop.addPropertyListener(new PropertyListener() {
+        properties.forEach((name, propertyType) -> {
+            Property property = createSimpleProperty(propertyType);
+            property.setName(name);
+            property.setLabel(name);
+            setPropertyValue(propertyType, property, projectComponent.getProperties().get(name));
+            property.addPropertyListener(new PropertyListener() {
                 @Override
                 public void propertyChanged(Property property) {
 
@@ -126,7 +151,12 @@ public class PropertyEditorIdeComponent implements IdeComponent {
 
                 @Override
                 public void propertyValueChanged(Property property) {
-                    projectComponent.getProperties().put(name, (String) property.getValue());
+                    Object value = property.getValue();
+                    if (value != null) {
+                        projectComponent.getProperties().put(name, value.toString());
+                    } else {
+                        projectComponent.getProperties().put(name, null);
+                    }
                 }
 
                 @Override
@@ -134,14 +164,14 @@ public class PropertyEditorIdeComponent implements IdeComponent {
 
                 }
             });
-            subproperties.add(prop);
+            subproperties.add(property);
         });
     }
 
     private void initializeEvents(ComposedProperty.PropertyList subproperties, ComponentType componentType) {
         Map<String, Event> events = componentType.getEvents();
         events.forEach((name, property) -> {
-            Property prop = new SimpleProperty(new StringType(), "");
+            Property prop = new SimpleProperty(new StringType(), ""); // TODO: AstType()
             prop.setName(name);
             prop.setLabel(name);
             prop.setHint(property.getDescription());

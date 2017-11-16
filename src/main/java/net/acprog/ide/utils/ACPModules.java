@@ -48,7 +48,7 @@ public class ACPModules {
     }
 
     public static Module getModule(Component component) {
-        ACPModules m = new ACPModules(IdeSettings.getInstance().getAcprogModulesFolder());
+        ACPModules m = new ACPModules(new File(IdeSettings.getInstance().getAcprogModulesFolder()));
         for (Module module : m.scanDirectory()) {
             if (module.getName().equals(component.getType())) {
                 return module;

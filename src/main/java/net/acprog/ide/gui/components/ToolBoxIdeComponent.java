@@ -31,7 +31,7 @@ public class ToolBoxIdeComponent implements IdeComponent, TreeSelectionListener 
 
     private void createNodes(DefaultMutableTreeNode top) {
         // Načítame všetky dostupné typy komponentov
-        File acpModulesDirectory = IdeSettings.getInstance().getAcprogModulesFolder();
+        File acpModulesDirectory = new File(IdeSettings.getInstance().getAcprogModulesFolder());
         ACPModules acpModules = new ACPModules(acpModulesDirectory);
         Collection<Module> allModules = acpModules.scanDirectory();
 

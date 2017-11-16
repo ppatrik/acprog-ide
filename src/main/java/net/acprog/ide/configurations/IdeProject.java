@@ -3,6 +3,9 @@ package net.acprog.ide.configurations;
 import net.acprog.builder.compilation.ACPCompiler;
 import net.acprog.builder.compilation.CompilationSettings;
 import net.acprog.builder.utils.FileUtils;
+import net.acprog.ide.gui.components.ConsoleIdeComponent;
+import net.acprog.ide.gui.utils.ConsoleIde;
+import net.acprog.ide.gui.utils.ConsoleInterface;
 import net.acprog.ide.gui.utils.ProcessUtils;
 
 import java.io.*;
@@ -51,19 +54,23 @@ public class IdeProject {
         sourceString = FileUtils.readFile(source);
     }
 
-    public boolean save() {
+    public boolean save(ConsoleInterface console) {
+        console.print("Saving ino file.........");
         try (Writer fw = new BufferedWriter(new FileWriter(getProjectInoFile()))) {
             fw.write(sourceString);
             fw.close();
         } catch (Exception e) {
+            console.println("Error!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            console.println(e.getMessage());
             return false;
         }
+        console.print("Saving xml file.........");
         project.saveToFile(getProjectXmlFile());
         return true;
     }
 
     public void close() {
-        save();
+        save(ConsoleIde.instance);
     }
 
     public static void closeProject() {
@@ -95,9 +102,9 @@ public class IdeProject {
         this.sourceString = sourceString;
     }
 
-    public void build(boolean clean) {
-        File acpModulesDirectory = IdeSettings.getInstance().getAcprogModulesFolder();
-        File arduinoLibraryDirectory = IdeSettings.getInstance().getArduinoLibraryFolder();
+    public void build(ConsoleInterface console, boolean clean) {
+        File acpModulesDirectory = new File(IdeSettings.getInstance().getAcprogModulesFolder());
+        File arduinoLibraryDirectory = new File(IdeSettings.getInstance().getArduinoLibraryFolder());
 
         File projectFile = getProjectXmlFile();
 
@@ -109,38 +116,38 @@ public class IdeProject {
 
         // Build
         try {
-            System.out.println("Zaciatok kompilacie");
+            console.println("Zaciatok kompilacie");
             ACPCompiler compiler = new ACPCompiler(acpModulesDirectory);
             CompilationSettings settings = new CompilationSettings();
             settings.setProjectConfigurationFile(projectFile);
             settings.setLibraryName(getLibraryName());
             settings.setOutputLibraryPath(arduinoLibraryDirectory);
             settings.setDebugMode(IdeSettings.getInstance().getDebugMode());
-            System.out.println("Koniec nastaveni");
+            console.println("Koniec nastaveni");
             compiler.compile(settings);
-            System.out.println("Hotovo");
+            console.println("Hotovo");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void verify() {
+    public void verify(ConsoleInterface console) {
         String proccess = IdeSettings.getInstance().getArduinoCli() + " --pref build.path=" + getProjectInoFile().getParentFile().getPath() + "\\build" + " --verify " + getProjectInoFile();
         int ret = ProcessUtils.run(proccess, (process) -> {
             BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             try {
                 while ((line = input.readLine()) != null) {
-                    System.out.println(line);
+                    console.println(line);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         });
         if(ret == 0) {
-            System.out.println("Hotovo");
+            console.println("Hotovo");
         } else{
-            System.out.println("Chyba, skontrolujte konzolu pre viac informácií.");
+            console.println("Chyba, skontrolujte konzolu pre viac informácií.");
         }
     }
 }
