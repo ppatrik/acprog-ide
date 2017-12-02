@@ -4,6 +4,7 @@ import bibliothek.gui.dock.common.CControl;
 import bibliothek.gui.dock.common.CLocation;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
+import net.acprog.ide.App;
 import net.acprog.ide.configurations.IdeProject;
 import net.acprog.ide.gui.components.*;
 import net.acprog.ide.gui.utils.ConsoleIde;
@@ -59,6 +60,8 @@ public class MainFrame extends JFrame {
     }
 
     private void InitializeEvents() {
+        eventManager.registerObserver(EventType.PROJECT_CREATE, this::openProject);
+        eventManager.registerObserver(EventType.PROJECT_OPEN, this::openProject);
         eventManager.registerObserver(EventType.PROJECT_SAVE, this::saveProject);
         eventManager.registerObserver(EventType.QUIT, this::closeProject);
 
@@ -71,9 +74,14 @@ public class MainFrame extends JFrame {
     }
 
     private void openPreferences(EventType eventType, Object o) {
-        JDialog frame = new PreferenciesFrame();
-        frame.pack();
-        frame.setVisible(true);
+        App.openSettings();
+    }
+
+    private void openProject(EventType eventType, Object o) {
+        eventManager.callEvent(EventType.PROJECT_PRE_SAVE);
+        ideProject.save(ConsoleIde.instance);
+        dispose();
+        App.openProjectChooser();
     }
 
     private void saveProject(EventType eventType, Object o) {

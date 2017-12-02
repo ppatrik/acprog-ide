@@ -7,15 +7,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
-public class PreferenciesFrame extends JDialog {
+public class SettingsFrame extends JDialog {
 
     private JPanel panel;
     private JPanel actionsPanel;
 
-    public PreferenciesFrame() {
+    public SettingsFrame() {
         setLayout(new BorderLayout());
         setTitle("Preferencies");
         setModal(true);
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
         InitializeComponets();
     }

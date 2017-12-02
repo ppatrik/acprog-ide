@@ -8,6 +8,7 @@ import net.acprog.ide.gui.utils.ConsoleIde;
 import net.acprog.ide.gui.utils.ConsoleInterface;
 import net.acprog.ide.gui.utils.ProcessUtils;
 
+import javax.swing.*;
 import java.io.*;
 
 public class IdeProject {

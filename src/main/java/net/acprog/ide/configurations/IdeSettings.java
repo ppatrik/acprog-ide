@@ -13,6 +13,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IdeSettings {
     private static final String SETTINGS_FILENAME = "acp_settings.xml";
@@ -24,11 +26,13 @@ public class IdeSettings {
         return ourInstance;
     }
 
+    private boolean initializedEmpty = true;
 
     private boolean debugMode;
     private String arduinoLibraryFolder;
     private String acprogModulesFolder;
     private String arduinoCli;
+    private List<IdeSettingsProject> lastProjects;
 
     private IdeSettings() {
         loadSettingsFromFile();
@@ -37,6 +41,7 @@ public class IdeSettings {
     private File getSettingsXmlFile() {
         File f = new File(SETTINGS_FILENAME);
         if (!f.exists()) {
+            initializedEmpty = false;
             saveSettingsToFile(f);
         }
         return f;
@@ -57,9 +62,19 @@ public class IdeSettings {
             arduinoCli = XmlUtils.getChildElement(xmlRoot, "arduino-cli").getTextContent();
             arduinoLibraryFolder = XmlUtils.getChildElement(xmlRoot, "arduino-library-folder").getTextContent();
             debugMode = "true".equals(XmlUtils.getChildElement(xmlRoot, "debug-mode").getTextContent().toLowerCase());
+            lastProjects = new ArrayList<>();
+            Element lastProjectElementRoot = XmlUtils.getChildElement(xmlRoot, "last-projects");
+            if(lastProjectElementRoot != null) {
+                List<Element> elements = XmlUtils.getChildElements(lastProjectElementRoot, "project");
+                if(elements != null) {
+                    for (Element element : elements) {
+                        lastProjects.add(IdeSettingsProject.loadSettingsFromXml(element));
+                    }
+                }
+            }
 
-        } catch (Exception var6) {
-            throw new ConfigurationException("Loading of project configuration failed.", var6);
+        } catch (Exception e) {
+            throw new ConfigurationException("Loading of project configuration failed.", e);
         }
     }
 
@@ -141,5 +156,16 @@ public class IdeSettings {
 
     public void setArduinoCli(String arduinoCli) {
         this.arduinoCli = arduinoCli;
+    }
+
+    public boolean isInitializedEmpty() {
+        return initializedEmpty;
+    }
+
+    public IdeSettingsProject getLatestProject() {
+        if (lastProjects.size() >= 1) {
+            return lastProjects.get(0);
+        }
+        return null;
     }
 }
