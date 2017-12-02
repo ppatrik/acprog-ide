@@ -19,6 +19,7 @@ import java.util.List;
 public class IdeSettings {
     private static final String SETTINGS_FILENAME = "acp_settings.xml";
     private static final String XML_ROOT_ELEMENT = "ide-settings";
+    private static final int MAX_LAST_PROJECTS = 10;
 
     private static IdeSettings ourInstance = new IdeSettings();
 
@@ -167,5 +168,14 @@ public class IdeSettings {
             return lastProjects.get(0);
         }
         return null;
+    }
+
+    public void addLastProject(IdeSettingsProject ideSettingsProject) {
+        lastProjects.add(ideSettingsProject);
+        if (lastProjects.size() > MAX_LAST_PROJECTS) {
+            for (int i = 0; i < lastProjects.size() - MAX_LAST_PROJECTS; i++) {
+                lastProjects.remove(0);
+            }
+        }
     }
 }
