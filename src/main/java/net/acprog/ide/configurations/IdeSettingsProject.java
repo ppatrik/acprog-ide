@@ -3,7 +3,6 @@ package net.acprog.ide.configurations;
 import net.acprog.builder.utils.XmlUtils;
 import org.w3c.dom.Element;
 
-import javax.swing.*;
 import java.io.File;
 
 public class IdeSettingsProject {

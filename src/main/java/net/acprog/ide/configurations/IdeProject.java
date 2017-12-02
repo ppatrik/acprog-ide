@@ -3,12 +3,10 @@ package net.acprog.ide.configurations;
 import net.acprog.builder.compilation.ACPCompiler;
 import net.acprog.builder.compilation.CompilationSettings;
 import net.acprog.builder.utils.FileUtils;
-import net.acprog.ide.gui.components.ConsoleIdeComponent;
 import net.acprog.ide.gui.utils.ConsoleIde;
 import net.acprog.ide.gui.utils.ConsoleInterface;
 import net.acprog.ide.gui.utils.ProcessUtils;
 
-import javax.swing.*;
 import java.io.*;
 
 public class IdeProject {
@@ -145,9 +143,9 @@ public class IdeProject {
                 e.printStackTrace();
             }
         });
-        if(ret == 0) {
+        if (ret == 0) {
             console.println("Hotovo");
-        } else{
+        } else {
             console.println("Chyba, skontrolujte konzolu pre viac informácií.");
         }
     }

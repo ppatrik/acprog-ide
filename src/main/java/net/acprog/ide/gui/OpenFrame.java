@@ -1,14 +1,10 @@
 package net.acprog.ide.gui;
 
 import net.acprog.ide.App;
-import net.acprog.ide.configurations.IdeProject;
-import net.acprog.ide.configurations.IdeSettings;
 import net.acprog.ide.configurations.IdeSettingsProject;
-import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 
 public class OpenFrame extends JDialog {
 

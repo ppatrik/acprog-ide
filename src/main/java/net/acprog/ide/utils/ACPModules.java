@@ -1,10 +1,8 @@
 package net.acprog.ide.utils;
 
-import net.acprog.builder.modules.ComponentType;
 import net.acprog.builder.modules.Module;
 import net.acprog.builder.project.Component;
 import net.acprog.ide.configurations.IdeSettings;
-import sun.security.pkcs11.Secmod;
 
 import java.io.File;
 import java.util.ArrayList;

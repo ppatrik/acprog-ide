@@ -64,9 +64,9 @@ public class IdeSettings {
             debugMode = "true".equals(XmlUtils.getChildElement(xmlRoot, "debug-mode").getTextContent().toLowerCase());
             lastProjects = new ArrayList<>();
             Element lastProjectElementRoot = XmlUtils.getChildElement(xmlRoot, "last-projects");
-            if(lastProjectElementRoot != null) {
+            if (lastProjectElementRoot != null) {
                 List<Element> elements = XmlUtils.getChildElements(lastProjectElementRoot, "project");
-                if(elements != null) {
+                if (elements != null) {
                     for (Element element : elements) {
                         lastProjects.add(IdeSettingsProject.loadSettingsFromXml(element));
                     }

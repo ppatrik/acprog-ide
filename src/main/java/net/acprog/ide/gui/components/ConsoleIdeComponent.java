@@ -7,8 +7,6 @@ import net.acprog.ide.gui.MainFrame;
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 import java.awt.*;
-import java.io.IOException;
-import java.io.PipedInputStream;
 
 public class ConsoleIdeComponent implements IdeComponent {
     private final MainFrame mainFrame;
