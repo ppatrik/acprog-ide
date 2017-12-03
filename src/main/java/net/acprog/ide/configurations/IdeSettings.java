@@ -113,6 +113,12 @@ public class IdeSettings {
             el.setTextContent(debugMode ? "true" : "false");
             xmlRoot.appendChild(el);
 
+            el = doc.createElement("last-projects");
+            for (IdeSettingsProject project : lastProjects) {
+                el.appendChild(project.saveToXml(doc));
+            }
+            xmlRoot.appendChild(el);
+
             // Save configuration to XML file
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer();
@@ -165,17 +171,19 @@ public class IdeSettings {
 
     public IdeSettingsProject getLatestProject() {
         if (lastProjects.size() >= 1) {
-            return lastProjects.get(0);
+            return lastProjects.get(lastProjects.size() - 1);
         }
         return null;
     }
 
     public void addLastProject(IdeSettingsProject ideSettingsProject) {
+        lastProjects.remove(ideSettingsProject);
         lastProjects.add(ideSettingsProject);
         if (lastProjects.size() > MAX_LAST_PROJECTS) {
             for (int i = 0; i < lastProjects.size() - MAX_LAST_PROJECTS; i++) {
                 lastProjects.remove(0);
             }
         }
+        saveSettingsToFile();
     }
 }

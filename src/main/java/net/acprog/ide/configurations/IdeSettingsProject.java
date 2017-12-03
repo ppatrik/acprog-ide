@@ -1,6 +1,7 @@
 package net.acprog.ide.configurations;
 
 import net.acprog.builder.utils.XmlUtils;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.File;
@@ -28,6 +29,18 @@ public class IdeSettingsProject {
 
     public String getProjektName() {
         return projektName;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj != null) {
+            IdeSettingsProject that = (IdeSettingsProject) obj;
+            if (this.projectDirectory.equals(that.projectDirectory) &&
+                    this.projektName.equals(that.projektName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -92,5 +105,19 @@ public class IdeSettingsProject {
         createFile(new File(projectDirectory.getAbsoluteFile() + File.separator + newProjectName + ".xml"), xmlContent.replace("{projectName}", newProjectName));
         createFile(new File(projectDirectory.getAbsoluteFile() + File.separator + newProjectName + ".ino"), inoContent.replace("{projectName}", newProjectName));
         return new IdeSettingsProject(projectDirectory.getAbsolutePath(), newProjectName);
+    }
+
+    public Element saveToXml(Document doc) {
+        Element projectElement = doc.createElement("project");
+
+        Element nameEl = doc.createElement("name");
+        nameEl.setTextContent(projektName);
+        Element locationEl = doc.createElement("directory");
+        locationEl.setTextContent(projectDirectory);
+
+        projectElement.appendChild(nameEl);
+        projectElement.appendChild(locationEl);
+
+        return projectElement;
     }
 }
