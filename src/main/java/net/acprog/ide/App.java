@@ -63,10 +63,16 @@ public class App {
     }
 
     public static void openProject(IdeSettingsProject ideSettingsProject) {
-        IdeSettings.getInstance().addLastProject(ideSettingsProject);
-        IdeProject ideProject = ideSettingsProject.getIdeProject();
-        MainFrame frame = new MainFrame(ideProject);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
+        try {
+            IdeSettings.getInstance().addLastProject(ideSettingsProject);
+            IdeProject ideProject = null;
+            ideProject = ideSettingsProject.getIdeProject();
+            MainFrame frame = new MainFrame(ideProject);
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+        } catch (IdeException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage(), "Acprog error", JOptionPane.ERROR_MESSAGE);
+            App.openProjectChooser();
+        }
     }
 }

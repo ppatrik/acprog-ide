@@ -16,6 +16,16 @@ public class ConsoleIde implements ConsoleInterface {
 
     @Override
     public void println(String s) {
-        MainFrame.instance.console.println(s + "\n");
+        MainFrame.instance.console.println(s);
+    }
+
+    @Override
+    public void err(String s) {
+        MainFrame.instance.console.err(s);
+    }
+
+    @Override
+    public void errln(String s) {
+        MainFrame.instance.console.errln(s);
     }
 }

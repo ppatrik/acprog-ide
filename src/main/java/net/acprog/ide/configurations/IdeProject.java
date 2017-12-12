@@ -1,8 +1,11 @@
 package net.acprog.ide.configurations;
 
 import net.acprog.builder.compilation.ACPCompiler;
+import net.acprog.builder.compilation.CompilationException;
 import net.acprog.builder.compilation.CompilationSettings;
+import net.acprog.builder.components.ConfigurationException;
 import net.acprog.builder.utils.FileUtils;
+import net.acprog.ide.IdeException;
 import net.acprog.ide.gui.utils.ConsoleIde;
 import net.acprog.ide.gui.utils.ConsoleInterface;
 import net.acprog.ide.gui.utils.ProcessUtils;
@@ -20,15 +23,16 @@ public class IdeProject {
     private Project project = null;
     private File source = null;
     private String sourceString = null;
+    private boolean opened = false;
 
-    private IdeProject(File projectFolder) {
+    private IdeProject(File projectFolder) throws IdeException {
         try {
             this.projectFolder = projectFolder;
             openProjectDefinition();
             openProjectSource();
+            opened = true;
         } catch (FileNotFoundException e) {
-            // todo: project not found exception
-            e.printStackTrace();
+            throw new IdeException("Error when opening project. Did you selected acprog project folder?");
         }
     }
 
@@ -44,8 +48,12 @@ public class IdeProject {
         return projectFolder.getName();
     }
 
-    private void openProjectDefinition() {
-        project = Project.loadFromFile(getProjectXmlFile());
+    private void openProjectDefinition() throws IdeException {
+        try {
+            project = Project.loadFromFile(getProjectXmlFile());
+        } catch (ConfigurationException e) {
+            throw new IdeException(e.getMessage());
+        }
     }
 
     private void openProjectSource() throws FileNotFoundException {
@@ -54,7 +62,7 @@ public class IdeProject {
     }
 
     public boolean save(ConsoleInterface console) {
-        console.print("Saving ino file.........");
+        console.println("Saving ino file.........");
         try (Writer fw = new BufferedWriter(new FileWriter(getProjectInoFile()))) {
             fw.write(sourceString);
             fw.close();
@@ -63,13 +71,15 @@ public class IdeProject {
             console.println(e.getMessage());
             return false;
         }
-        console.print("Saving xml file.........");
+        console.println("Saving xml file.........");
         project.saveToFile(getProjectXmlFile());
         return true;
     }
 
     public void close() {
-        save(ConsoleIde.instance);
+        if (opened) {
+            save(ConsoleIde.instance);
+        }
     }
 
     public static void closeProject() {
@@ -77,7 +87,7 @@ public class IdeProject {
         ourInstance = null;
     }
 
-    public static IdeProject openProject(File projectFolder) {
+    public static IdeProject openProject(File projectFolder) throws IdeException {
         if (ourInstance != null) {
             closeProject();
         }
@@ -125,6 +135,8 @@ public class IdeProject {
             console.println("Koniec nastaveni");
             compiler.compile(settings);
             console.println("Hotovo");
+        } catch (CompilationException e) {
+            console.errln(e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
         }

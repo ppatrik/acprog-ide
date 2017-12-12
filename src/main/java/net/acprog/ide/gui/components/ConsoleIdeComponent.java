@@ -3,16 +3,17 @@ package net.acprog.ide.gui.components;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
 import net.acprog.ide.gui.MainFrame;
+import net.acprog.ide.gui.utils.ConsoleInterface;
 
 import javax.swing.*;
-import javax.swing.text.DefaultCaret;
+import javax.swing.text.*;
 import java.awt.*;
 
-public class ConsoleIdeComponent implements IdeComponent {
+public class ConsoleIdeComponent implements IdeComponent, ConsoleInterface {
     private final MainFrame mainFrame;
 
     private JScrollPane panel;
-    private JTextArea textArea;
+    private JTextPane textPane;
 
 
     public ConsoleIdeComponent(MainFrame mainFrame) {
@@ -21,12 +22,12 @@ public class ConsoleIdeComponent implements IdeComponent {
     }
 
     private void InitializeComponents() {
-        textArea = new JTextArea();
-        textArea.setEditable(false);
-        textArea.setFont(new Font(Font.DIALOG, Font.PLAIN, 10));
-        DefaultCaret caret = (DefaultCaret) textArea.getCaret();
-        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
-        panel = new JScrollPane(textArea);
+
+        DefaultStyledDocument document = new DefaultStyledDocument();
+        textPane = new JTextPane(document);
+        //textPane.setEditable(false);
+
+        panel = new JScrollPane(textPane);
     }
 
     public JComponent render() {
@@ -38,17 +39,36 @@ public class ConsoleIdeComponent implements IdeComponent {
         return new DefaultSingleCDockable(getClass().toString(), "Console", render());
     }
 
+    private synchronized void appendToPane(JTextPane tp, String msg, Color c) {
+        tp.setEditable(true);
+        StyleContext sc = StyleContext.getDefaultStyleContext();
+        AttributeSet aset;
 
-    public synchronized void appendRow(String string) {
-        textArea.append(string);
-        textArea.setCaretPosition(textArea.getDocument().getLength());
+        aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, c);
+        aset = sc.addAttribute(aset, StyleConstants.FontFamily, "Lucida Console");
+        aset = sc.addAttribute(aset, StyleConstants.Alignment, StyleConstants.ALIGN_JUSTIFIED);
+        aset = sc.addAttribute(aset, StyleConstants.Alignment, StyleConstants.ALIGN_JUSTIFIED);
+
+        int len = tp.getDocument().getLength();
+        tp.setCaretPosition(len);
+        tp.setCharacterAttributes(aset, false);
+        tp.replaceSelection(msg);
+        tp.setEditable(false);
     }
 
     public void print(String line) {
-        appendRow(line);
+        appendToPane(textPane, line, Color.BLACK);
     }
 
     public void println(String line) {
-        appendRow(line + "\n");
+        appendToPane(textPane, line + "\n", Color.BLACK);
+    }
+
+    public void err(String line) {
+        appendToPane(textPane, line, Color.RED);
+    }
+
+    public void errln(String line) {
+        appendToPane(textPane, line + "\n", Color.RED);
     }
 }

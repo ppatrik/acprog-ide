@@ -1,6 +1,7 @@
 package net.acprog.ide.gui;
 
 import net.acprog.ide.App;
+import net.acprog.ide.IdeException;
 import net.acprog.ide.configurations.IdeSettingsProject;
 import net.acprog.ide.gui.generated.OpenFrameGenerated;
 
@@ -31,13 +32,7 @@ public class OpenFrame extends OpenFrameGenerated {
             fc.showOpenDialog(OpenFrame.this);
         });
         newProjectButton.addActionListener(e -> {
-            try {
-                IdeSettingsProject project = IdeSettingsProject.createNewProject(new File(newProjectLocation.getText()), newProjectName.getText());
-                OpenFrame.this.dispose();
-                App.openProject(project);
-            } catch (Exception e1) {
-                e1.printStackTrace();
-            }
+            createProject(new File(newProjectLocation.getText()), newProjectName.getText());
         });
 
         openProjectLocationSelection.addActionListener(e -> {
@@ -53,10 +48,32 @@ public class OpenFrame extends OpenFrameGenerated {
             fc.showOpenDialog(OpenFrame.this);
         });
         openProjectButton.addActionListener(e -> {
-            IdeSettingsProject project = IdeSettingsProject.fromFile(new File(openProjectLocation.getText()));
+            openProject(new File(openProjectLocation.getText()));
+        });
+    }
+
+    private void createProject(File path, String name) {
+        try {
+            IdeSettingsProject project = IdeSettingsProject.createNewProject(path, name);
             OpenFrame.this.dispose();
             App.openProject(project);
-        });
+        } catch (IdeException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage(), "Acprog error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void openProject(File projectPath) {
+        try {
+            IdeSettingsProject project = IdeSettingsProject.fromFile(projectPath);
+            OpenFrame.this.dispose();
+            App.openProject(project);
+        } catch (IdeException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage(), "Acprog error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

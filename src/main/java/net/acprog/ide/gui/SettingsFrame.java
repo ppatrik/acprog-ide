@@ -38,6 +38,10 @@ public class SettingsFrame extends SettingsFrameGenerated {
         arduinoLibraryFolder.setText(IdeSettings.getInstance().getArduinoLibraryFolder());
         acprogModulesFolder.setText(IdeSettings.getInstance().getAcprogModulesFolder());
 
+        cancelButton.addActionListener(e -> {
+            SettingsFrame.this.dispose();
+        });
+
         saveButton.addActionListener(e -> {
             IdeSettings.getInstance().setArduinoCli(arduinoCli.getText());
             IdeSettings.getInstance().setArduinoLibraryFolder(arduinoLibraryFolder.getText());
