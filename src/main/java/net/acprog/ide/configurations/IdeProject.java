@@ -8,7 +8,6 @@ import net.acprog.builder.utils.FileUtils;
 import net.acprog.ide.IdeException;
 import net.acprog.ide.gui.utils.ConsoleIde;
 import net.acprog.ide.gui.utils.ConsoleInterface;
-import net.acprog.ide.gui.utils.ProcessUtils;
 
 import java.io.*;
 
@@ -111,7 +110,7 @@ public class IdeProject {
         this.sourceString = sourceString;
     }
 
-    public void build(ConsoleInterface console, boolean clean) {
+    public boolean build(ConsoleInterface console, boolean clean) {
         File acpModulesDirectory = new File(IdeSettings.getInstance().getAcprogModulesFolder());
         File arduinoLibraryDirectory = new File(IdeSettings.getInstance().getArduinoLibraryFolder());
 
@@ -135,30 +134,49 @@ public class IdeProject {
             console.println("Koniec nastaveni");
             compiler.compile(settings);
             console.println("Hotovo");
+            return true;
         } catch (CompilationException e) {
             console.errln(e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return false;
     }
 
-    public void verify(ConsoleInterface console) {
-        String proccess = IdeSettings.getInstance().getArduinoCli() + " --pref build.path=" + getProjectInoFile().getParentFile().getPath() + "\\build" + " --verify " + getProjectInoFile();
-        int ret = ProcessUtils.run(proccess, (process) -> {
-            BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            try {
-                while ((line = input.readLine()) != null) {
-                    console.println(line);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+    public boolean verify(ConsoleInterface console) {
+        String proccess = IdeSettings.getInstance().getArduinoCli();
+        proccess += " --verify";
+        proccess += " --board " + "arduino:avr:uno";
+        proccess += " --pref build.path=" + getProjectInoFile().getParentFile().getPath() + "\\build";
+        proccess += " --verbose";
+        proccess += " " + getProjectInoFile();
+
+        int ret = console.runProccess(proccess);
         if (ret == 0) {
             console.println("Hotovo");
-        } else {
-            console.println("Chyba, skontrolujte konzolu pre viac informácií.");
+            return true;
         }
+
+        console.println("Chyba, skontrolujte konzolu pre viac informácií.");
+        return false;
+    }
+
+    public boolean upload(ConsoleInterface console, String serialPort) {
+        String proccess = IdeSettings.getInstance().getArduinoCli();
+        proccess += " --upload";
+        proccess += " --board " + "arduino:avr:uno";
+        proccess += " --port " + serialPort;
+        proccess += " --pref build.path=" + getProjectInoFile().getParentFile().getPath() + "\\build";
+        proccess += " --verbose";
+        proccess += " " + getProjectInoFile();
+
+        int ret = console.runProccess(proccess);
+        if (ret == 0) {
+            console.println("Hotovo");
+            return true;
+        }
+
+        console.println("Chyba, skontrolujte konzolu pre viac informácií.");
+        return false;
     }
 }

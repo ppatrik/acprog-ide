@@ -5,14 +5,14 @@ import bibliothek.gui.dock.common.SingleCDockable;
 import net.acprog.builder.modules.Module;
 import net.acprog.ide.configurations.Component;
 import net.acprog.ide.configurations.Project;
-import net.acprog.ide.gui.MainFrame;
+import net.acprog.ide.gui.EditorFrame;
 import net.acprog.ide.utils.event.EventType;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class VisualEditorIdeComponent implements IdeComponent {
-    private final MainFrame mainFrame;
+    private final EditorFrame editorFrame;
 
     protected VisualEditorJPanel scrollPane;
 
@@ -35,17 +35,17 @@ public class VisualEditorIdeComponent implements IdeComponent {
 
     }
 
-    public VisualEditorIdeComponent(MainFrame mainFrame) {
-        this.mainFrame = mainFrame;
+    public VisualEditorIdeComponent(EditorFrame editorFrame) {
+        this.editorFrame = editorFrame;
 
         InitializeComponents();
 
         // vlozenie komponentov do plochy
-        Project project = mainFrame.getIdeProject().getProject();
+        Project project = editorFrame.getIdeProject().getProject();
         for (Component component : project.getComponents()) {
             scrollPane.add(component);
         }
-        mainFrame.getEventManager().registerObserver(EventType.COMPONENT_CREATE, this::componentCreateEvent);
+        editorFrame.getEventManager().registerObserver(EventType.COMPONENT_CREATE, this::componentCreateEvent);
     }
 
     public void componentCreateEvent(EventType eventType, Object o) {
@@ -62,12 +62,12 @@ public class VisualEditorIdeComponent implements IdeComponent {
         myComponent.setHeight(25);
 
         // vlozenie komponentu do projektu
-        Project project = mainFrame.getIdeProject().getProject();
+        Project project = editorFrame.getIdeProject().getProject();
         project.addComponent(myComponent);
         scrollPane.add(myComponent);
         scrollPane.updateUI();
 
-        getMainFrame().getEventManager().registerObserver(EventType.VISUAL_EDITOR_UPDATEUI, (eventType1, o1) -> scrollPane.updateUI());
+        getEditorFrame().getEventManager().registerObserver(EventType.VISUAL_EDITOR_UPDATEUI, (eventType1, o1) -> scrollPane.updateUI());
     }
 
     private void InitializeComponents() {
@@ -83,7 +83,7 @@ public class VisualEditorIdeComponent implements IdeComponent {
         return new DefaultSingleCDockable(getClass().toString(), "Visual editor", render());
     }
 
-    public MainFrame getMainFrame() {
-        return mainFrame;
+    public EditorFrame getEditorFrame() {
+        return editorFrame;
     }
 }

@@ -19,7 +19,7 @@ public class ToolBoxComponent implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         ToolBoxComponent source = (ToolBoxComponent) e.getSource();
         Module module = source.getModule();
-        toolBoxIdeComponent.getMainFrame().getEventManager().callEvent(EventType.COMPONENT_CREATE, module);
+        toolBoxIdeComponent.getEditorFrame().getEventManager().callEvent(EventType.COMPONENT_CREATE, module);
     }
 
     public Module getModule() {

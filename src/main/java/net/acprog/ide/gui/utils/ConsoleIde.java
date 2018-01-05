@@ -1,6 +1,6 @@
 package net.acprog.ide.gui.utils;
 
-import net.acprog.ide.gui.MainFrame;
+import net.acprog.ide.gui.EditorFrame;
 
 public class ConsoleIde implements ConsoleInterface {
 
@@ -11,21 +11,26 @@ public class ConsoleIde implements ConsoleInterface {
 
     @Override
     public void print(String s) {
-        MainFrame.instance.console.print(s);
+        EditorFrame.instance.console.print(s);
     }
 
     @Override
     public void println(String s) {
-        MainFrame.instance.console.println(s);
+        EditorFrame.instance.console.println(s);
     }
 
     @Override
     public void err(String s) {
-        MainFrame.instance.console.err(s);
+        EditorFrame.instance.console.err(s);
     }
 
     @Override
     public void errln(String s) {
-        MainFrame.instance.console.errln(s);
+        EditorFrame.instance.console.errln(s);
+    }
+
+    @Override
+    public int runProccess(String proccess) {
+        return EditorFrame.instance.console.runProccess(proccess);
     }
 }

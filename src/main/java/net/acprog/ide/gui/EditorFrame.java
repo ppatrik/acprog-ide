@@ -6,22 +6,32 @@ import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
 import net.acprog.ide.App;
 import net.acprog.ide.configurations.IdeProject;
+import net.acprog.ide.configurations.IdeSettings;
 import net.acprog.ide.gui.components.*;
 import net.acprog.ide.gui.utils.ConsoleIde;
-import net.acprog.ide.gui.utils.ConsoleInterface;
+import net.acprog.ide.platform.Platform;
+import net.acprog.ide.utils.BoardPort;
 import net.acprog.ide.utils.event.EventManager;
 import net.acprog.ide.utils.event.EventType;
+import net.acprog.ide.utils.view.StubMenuListener;
 
 import javax.swing.*;
+import javax.swing.event.MenuEvent;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
-public class MainFrame extends JFrame {
+public class EditorFrame extends JFrame {
 
-    public static MainFrame instance;
+    public static EditorFrame instance;
 
     private final IdeProject ideProject;
 
@@ -37,7 +47,9 @@ public class MainFrame extends JFrame {
 
     public ConsoleIdeComponent console;
 
-    public MainFrame(IdeProject ideProject) {
+    public EditorIdeComponent code;
+
+    public EditorFrame(IdeProject ideProject) {
         instance = this;
 
         this.ideProject = ideProject;
@@ -65,8 +77,15 @@ public class MainFrame extends JFrame {
         eventManager.registerObserver(EventType.PROJECT_SAVE, this::saveProject);
         eventManager.registerObserver(EventType.QUIT, this::closeProject);
 
-        eventManager.registerObserver(EventType.COMPILE, this::compileProject);
-        eventManager.registerObserver(EventType.COMPILE_AND_RUN, this::compileProjectAndRun);
+        eventManager.registerObserver(EventType.BUILD, (e, o) -> {
+            new Thread(this::compilerBuild).start();
+        });
+        eventManager.registerObserver(EventType.VERIFY, (e, o) -> {
+            new Thread(this::compilerVerify).start();
+        });
+        eventManager.registerObserver(EventType.UPLOAD, (e, o) -> {
+            new Thread(this::compilerUpload).start();
+        });
         eventManager.registerObserver(EventType.HELP_ABOUT, this::helpAbout);
         eventManager.registerObserver(EventType.HELP_SLACK, this::helpSlack);
         eventManager.registerObserver(EventType.HELP_UPDATE, this::helpUpdate);
@@ -129,20 +148,37 @@ public class MainFrame extends JFrame {
         }
     }
 
-    private void compileProject(EventType eventType, Object o) {
+    private boolean compilerBuild() {
         eventManager.callEvent(EventType.PROJECT_PRE_SAVE);
-        new Thread(() -> {
-            ConsoleInterface console = ConsoleIde.instance;
-            ideProject.save(console);
-            ideProject.build(console, false);
-            ideProject.verify(console);
-            console.println("All tasks finished successfully\n");
-        }).start();
+
+        if (ideProject.save(ConsoleIde.instance) &&
+                ideProject.build(ConsoleIde.instance, false)) {
+            ConsoleIde.instance.println("Build SUCCESS");
+            return true;
+        }
+        return false;
     }
 
-    private void compileProjectAndRun(EventType eventType, Object o) {
-        compileProject(eventType, o);
-        // TODO: spustenie projektu na arduine
+    private boolean compilerVerify() {
+        if (compilerBuild()) {
+
+            if (ideProject.verify(ConsoleIde.instance)) {
+                ConsoleIde.instance.println("Verify SUCCESS");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean compilerUpload() {
+        if (compilerBuild()) {
+
+            if (ideProject.upload(ConsoleIde.instance, IdeSettings.getInstance().getSerialPort())) {
+                ConsoleIde.instance.println("Upload SUCCESS");
+                return true;
+            }
+        }
+        return false;
     }
 
     private void InitializeToolBar() {
@@ -150,16 +186,19 @@ public class MainFrame extends JFrame {
 
         JButton button;
 
-        //first button
         button = new JButton();
-        button.setText("Compile");
-        button.addActionListener(e -> eventManager.callEvent(EventType.COMPILE));
+        button.setText("Build");
+        button.addActionListener(e -> eventManager.callEvent(EventType.BUILD));
         toolBar.add(button);
 
-        //second button
         button = new JButton();
-        button.setText("Compile & run");
-        button.addActionListener(e -> eventManager.callEvent(EventType.COMPILE_AND_RUN));
+        button.setText("Verify");
+        button.addActionListener(e -> eventManager.callEvent(EventType.VERIFY));
+        toolBar.add(button);
+
+        button = new JButton();
+        button.setText("Upload");
+        button.addActionListener(e -> eventManager.callEvent(EventType.UPLOAD));
         toolBar.add(button);
 
     }
@@ -200,6 +239,7 @@ public class MainFrame extends JFrame {
         control.addDockable(dockable);
         dockable.setLocation(CLocation.base().normalEast(0.25));
         dockable.setVisible(true);
+        code = (EditorIdeComponent) c;
 
         c = new PropertyEditorIdeComponent(this);
         dockable = c.dockable();
@@ -223,6 +263,8 @@ public class MainFrame extends JFrame {
         }
     }
 
+    private JMenu portMenu;
+
     private void InitializeMenuBar() {
         menuBar = new JMenuBar();
 
@@ -234,7 +276,7 @@ public class MainFrame extends JFrame {
         menu.setMnemonic(KeyEvent.VK_F);
         menuBar.add(menu);
 
-        // Build IdeProject submenu
+        // region Build IdeProject submenu
         menuItem = new JMenuItem("New project", KeyEvent.VK_N);
         menuItem.addActionListener(e -> eventManager.callEvent(EventType.PROJECT_CREATE));
         menu.add(menuItem);
@@ -254,13 +296,31 @@ public class MainFrame extends JFrame {
         menuItem = new JMenuItem("Quit", KeyEvent.VK_Q);
         menuItem.addActionListener(e -> eventManager.callEvent(EventType.QUIT));
         menu.add(menuItem);
+        // endregion
+
+        // Build Tools menu
+        menu = new JMenu("Tools");
+        menu.setMnemonic(KeyEvent.VK_T);
+        menu.addMenuListener(new StubMenuListener() {
+            public void menuSelected(MenuEvent e) {
+                populatePortMenu();
+            }
+        });
+        menuBar.add(menu);
+
+        // region Build Tools submenu
+        portMenu = new JMenu("Port");
+        populatePortMenu();
+        menu.add(portMenu);
+
+        // endregion
 
         // Build Help menu
         menu = new JMenu("Help");
         menu.setMnemonic(KeyEvent.VK_H);
         menuBar.add(menu);
 
-        // Build Help submenu
+        // region Build Help submenu
         menuItem = new JMenuItem("About us", KeyEvent.VK_A);
         menuItem.addActionListener(e -> eventManager.callEvent(EventType.HELP_ABOUT));
         menu.add(menuItem);
@@ -272,6 +332,7 @@ public class MainFrame extends JFrame {
         menuItem = new JMenuItem("Slack comunity", KeyEvent.VK_S);
         menuItem.addActionListener(e -> eventManager.callEvent(EventType.HELP_SLACK));
         menu.add(menuItem);
+        // endregion
 
         setJMenuBar(menuBar);
     }
@@ -282,5 +343,69 @@ public class MainFrame extends JFrame {
 
     public EventManager getEventManager() {
         return eventManager;
+    }
+
+    private final static List<String> BOARD_PROTOCOLS_ORDER = Arrays.asList("serial", "network");
+    private final static List<String> BOARD_PROTOCOLS_ORDER_TRANSLATIONS = Arrays.asList("Serial ports", "Network ports");
+
+    private void populatePortMenu() {
+        portMenu.removeAll();
+
+        Platform platform = App.getPlatform();
+
+        String selectedPort = IdeSettings.getInstance().getSerialPort();
+
+        List<BoardPort> ports = App.getDiscoveryManager().discovery();
+
+        ports = platform.filterPorts(ports, true);
+
+        Collections.sort(ports, new Comparator<BoardPort>() {
+            @Override
+            public int compare(BoardPort o1, BoardPort o2) {
+                return BOARD_PROTOCOLS_ORDER.indexOf(o1.getProtocol()) - BOARD_PROTOCOLS_ORDER.indexOf(o2.getProtocol());
+            }
+        });
+
+        String lastProtocol = null;
+        String lastProtocolTranslated;
+        for (BoardPort port : ports) {
+            if (lastProtocol == null || !port.getProtocol().equals(lastProtocol)) {
+                if (lastProtocol != null) {
+                    portMenu.addSeparator();
+                }
+                lastProtocol = port.getProtocol();
+
+                if (BOARD_PROTOCOLS_ORDER.indexOf(port.getProtocol()) != -1) {
+                    lastProtocolTranslated = BOARD_PROTOCOLS_ORDER_TRANSLATIONS.get(BOARD_PROTOCOLS_ORDER.indexOf(port.getProtocol()));
+                } else {
+                    lastProtocolTranslated = port.getProtocol();
+                }
+                JMenuItem lastProtocolMenuItem = new JMenuItem(lastProtocolTranslated);
+                lastProtocolMenuItem.setEnabled(false);
+                portMenu.add(lastProtocolMenuItem);
+            }
+            String address = port.getAddress();
+            String label = port.getLabel();
+
+            JCheckBoxMenuItem item = new JCheckBoxMenuItem(label, address.equals(selectedPort));
+            item.addActionListener(new SerialMenuListener(address));
+            portMenu.add(item);
+        }
+
+        portMenu.setEnabled(portMenu.getMenuComponentCount() > 0);
+    }
+
+    class SerialMenuListener implements ActionListener {
+
+        private final String serialPort;
+
+        public SerialMenuListener(String serialPort) {
+            this.serialPort = serialPort;
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            IdeSettings.getInstance().setSerialPort(serialPort);
+        }
+
     }
 }

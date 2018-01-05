@@ -32,15 +32,27 @@
         <dependency>
             <groupId>sk.gbox.swing</groupId>
             <artifactId>properties-panel</artifactId>
-            <version>0.0.1</version>
+            <version>0.0.2</version>
+            <systemPath>${project.basedir}/lib/properties-panel-0.0.2.jar</systemPath>
+            <scope>system</scope>
         </dependency>
 
         <dependency>
             <groupId>net.acprog</groupId>
             <artifactId>builder</artifactId>
             <version>0.0.2</version>
-            <systemPath>${project.basedir}/libs/builder-0.0.2-jar-with-dependencies.jar</systemPath>
+            <systemPath>${project.basedir}/lib/builder-0.0.2-jar-with-dependencies.jar</systemPath>
             <scope>system</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>3.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>platform</artifactId>
+            <version>3.4.0</version>
         </dependency>
 
     </dependencies>

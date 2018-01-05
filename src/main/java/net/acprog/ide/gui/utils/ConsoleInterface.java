@@ -8,4 +8,6 @@ public interface ConsoleInterface {
     public void err(String message);
 
     public void errln(String message);
+
+    int runProccess(String proccess);
 }

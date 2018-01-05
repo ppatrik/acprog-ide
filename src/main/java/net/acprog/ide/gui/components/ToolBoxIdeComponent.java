@@ -4,7 +4,7 @@ import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
 import net.acprog.builder.modules.Module;
 import net.acprog.ide.configurations.IdeSettings;
-import net.acprog.ide.gui.MainFrame;
+import net.acprog.ide.gui.EditorFrame;
 import net.acprog.ide.utils.ACPModules;
 import net.acprog.ide.utils.event.EventType;
 
@@ -19,13 +19,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ToolBoxIdeComponent implements IdeComponent, TreeSelectionListener {
-    private final MainFrame mainFrame;
+    private final EditorFrame editorFrame;
 
     protected JTree tree;
     protected JScrollPane scrollPane;
 
-    public ToolBoxIdeComponent(MainFrame mainFrame) {
-        this.mainFrame = mainFrame;
+    public ToolBoxIdeComponent(EditorFrame editorFrame) {
+        this.editorFrame = editorFrame;
         InitializeComponents();
     }
 
@@ -107,8 +107,8 @@ public class ToolBoxIdeComponent implements IdeComponent, TreeSelectionListener 
         return new DefaultSingleCDockable(getClass().toString(), "Toolbox", render());
     }
 
-    public MainFrame getMainFrame() {
-        return mainFrame;
+    public EditorFrame getEditorFrame() {
+        return editorFrame;
     }
 
     @Override
@@ -123,7 +123,7 @@ public class ToolBoxIdeComponent implements IdeComponent, TreeSelectionListener 
         Object nodeInfo = node.getUserObject();
         if (node.isLeaf()) {
             ToolBoxComponent toolBoxComponent = (ToolBoxComponent) nodeInfo;
-            getMainFrame().getEventManager().callEvent(EventType.COMPONENT_CREATE, toolBoxComponent.getModule());
+            getEditorFrame().getEventManager().callEvent(EventType.COMPONENT_CREATE, toolBoxComponent.getModule());
         }
     }
 }

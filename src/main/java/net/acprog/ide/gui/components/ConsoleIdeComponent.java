@@ -2,22 +2,26 @@ package net.acprog.ide.gui.components;
 
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
-import net.acprog.ide.gui.MainFrame;
+import net.acprog.ide.gui.EditorFrame;
 import net.acprog.ide.gui.utils.ConsoleInterface;
+import net.acprog.ide.gui.utils.ProcessUtils;
 
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class ConsoleIdeComponent implements IdeComponent, ConsoleInterface {
-    private final MainFrame mainFrame;
+    private final EditorFrame editorFrame;
 
     private JScrollPane panel;
     private JTextPane textPane;
 
 
-    public ConsoleIdeComponent(MainFrame mainFrame) {
-        this.mainFrame = mainFrame;
+    public ConsoleIdeComponent(EditorFrame editorFrame) {
+        this.editorFrame = editorFrame;
         InitializeComponents();
     }
 
@@ -70,5 +74,21 @@ public class ConsoleIdeComponent implements IdeComponent, ConsoleInterface {
 
     public void errln(String line) {
         appendToPane(textPane, line + "\n", Color.RED);
+    }
+
+    @Override
+    public int runProccess(String proccess) {
+        appendToPane(textPane, "> " + proccess + "\n", Color.GRAY);
+        return ProcessUtils.run(proccess, (process) -> {
+            BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            try {
+                while ((line = input.readLine()) != null) {
+                    println(line);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }

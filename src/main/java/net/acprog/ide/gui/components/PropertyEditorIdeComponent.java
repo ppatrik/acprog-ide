@@ -7,7 +7,8 @@ import net.acprog.builder.components.PropertyType;
 import net.acprog.builder.modules.ComponentType;
 import net.acprog.builder.modules.Module;
 import net.acprog.ide.configurations.Component;
-import net.acprog.ide.gui.MainFrame;
+import net.acprog.ide.gui.EditorFrame;
+import net.acprog.ide.gui.property.AstType;
 import net.acprog.ide.utils.ACPModules;
 import net.acprog.ide.utils.event.EventType;
 import sk.gbox.swing.propertiespanel.*;
@@ -19,14 +20,14 @@ import javax.swing.*;
 import java.util.Map;
 
 public class PropertyEditorIdeComponent implements IdeComponent {
-    private final MainFrame mainFrame;
+    private final EditorFrame editorFrame;
 
     protected Component projectComponent;
 
     protected PropertiesPanel propertiesPanel;
 
-    public PropertyEditorIdeComponent(MainFrame mainFrame) {
-        this.mainFrame = mainFrame;
+    public PropertyEditorIdeComponent(EditorFrame editorFrame) {
+        this.editorFrame = editorFrame;
 
         InitializeComponents();
 
@@ -39,7 +40,7 @@ public class PropertyEditorIdeComponent implements IdeComponent {
     }
 
     private void addEventListeners() {
-        mainFrame.getEventManager().registerObserver(EventType.COMPONENT_SELECTED, this::onComponentSelected);
+        editorFrame.getEventManager().registerObserver(EventType.COMPONENT_SELECTED, this::onComponentSelected);
     }
 
     private void InitializeComponents() {
@@ -69,7 +70,7 @@ public class PropertyEditorIdeComponent implements IdeComponent {
             @Override
             public void propertyValueChanged(Property property) {
                 projectComponent.setName((String) property.getValue());
-                mainFrame.getEventManager().callEvent(EventType.VISUAL_EDITOR_UPDATEUI);
+                editorFrame.getEventManager().callEvent(EventType.VISUAL_EDITOR_UPDATEUI);
             }
 
             @Override
@@ -113,7 +114,7 @@ public class PropertyEditorIdeComponent implements IdeComponent {
         propertiesPanel.setModel(mainProperty);
     }
 
-    private static SimpleProperty createSimpleProperty(PropertyType propertyType) {
+    private static Property createSimpleProperty(PropertyType propertyType) {
         if ("bool".equals(propertyType.getType())) {
             return new SimpleProperty(new BooleanType(), false);
         }
@@ -121,7 +122,7 @@ public class PropertyEditorIdeComponent implements IdeComponent {
             return new SimpleProperty(new IntegerType(0, Long.MAX_VALUE, true), null);
         }
         if ("pin".equals(propertyType.getType())) {
-            return new SimpleProperty(new IntegerType(0, 50, true), null);
+            //return new SimpleProperty(new PinType(), null);
         }
         return new SimpleProperty(new StringType(), "");
     }
@@ -171,7 +172,7 @@ public class PropertyEditorIdeComponent implements IdeComponent {
     private void initializeEvents(ComposedProperty.PropertyList subproperties, ComponentType componentType) {
         Map<String, Event> events = componentType.getEvents();
         events.forEach((name, property) -> {
-            Property prop = new SimpleProperty(new StringType(), ""); // TODO: AstType()
+            Property prop = new SimpleProperty(new AstType(), "");
             prop.setName(name);
             prop.setLabel(name);
             prop.setHint(property.getDescription());

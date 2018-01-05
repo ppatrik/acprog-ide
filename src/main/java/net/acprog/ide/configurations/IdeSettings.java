@@ -27,9 +27,11 @@ public class IdeSettings {
         return ourInstance;
     }
 
+
     private boolean initializedEmpty = true;
 
     private boolean debugMode;
+    private String serialPort = null;
     private String arduinoLibraryFolder;
     private String acprogModulesFolder;
     private String arduinoCli;
@@ -62,6 +64,11 @@ public class IdeSettings {
             acprogModulesFolder = XmlUtils.getChildElement(xmlRoot, "acprog-modules-folder").getTextContent();
             arduinoCli = XmlUtils.getChildElement(xmlRoot, "arduino-cli").getTextContent();
             arduinoLibraryFolder = XmlUtils.getChildElement(xmlRoot, "arduino-library-folder").getTextContent();
+            try {
+                serialPort = XmlUtils.getChildElement(xmlRoot, "serial-port").getTextContent();
+            } catch (Exception e) {
+                serialPort = null;
+            }
             debugMode = "true".equals(XmlUtils.getChildElement(xmlRoot, "debug-mode").getTextContent().toLowerCase());
             lastProjects = new ArrayList<>();
             Element lastProjectElementRoot = XmlUtils.getChildElement(xmlRoot, "last-projects");
@@ -107,6 +114,10 @@ public class IdeSettings {
 
             el = doc.createElement("arduino-library-folder");
             el.setTextContent(arduinoLibraryFolder);
+            xmlRoot.appendChild(el);
+
+            el = doc.createElement("serial-port");
+            el.setTextContent(serialPort);
             xmlRoot.appendChild(el);
 
             el = doc.createElement("debug-mode");
@@ -185,5 +196,13 @@ public class IdeSettings {
             }
         }
         saveSettingsToFile();
+    }
+
+    public String getSerialPort() {
+        return serialPort;
+    }
+
+    public void setSerialPort(String serialPort) {
+        this.serialPort = serialPort;
     }
 }

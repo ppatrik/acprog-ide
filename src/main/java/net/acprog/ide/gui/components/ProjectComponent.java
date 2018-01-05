@@ -51,7 +51,7 @@ public class ProjectComponent extends JButton implements MouseMotionListener, Ac
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        visualEditorIdeComponent.getMainFrame().getEventManager().callEvent(EventType.COMPONENT_SELECTED, (Object) projectComponent);
+        visualEditorIdeComponent.getEditorFrame().getEventManager().callEvent(EventType.COMPONENT_SELECTED, (Object) projectComponent);
     }
 
     @Override
