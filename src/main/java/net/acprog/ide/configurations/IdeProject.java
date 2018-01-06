@@ -66,8 +66,7 @@ public class IdeProject {
             fw.write(sourceString);
             fw.close();
         } catch (Exception e) {
-            console.println("Error!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-            console.println(e.getMessage());
+            console.errln(e.getMessage());
             return false;
         }
         console.println("Saving xml file.........");
@@ -124,16 +123,13 @@ public class IdeProject {
 
         // Build
         try {
-            console.println("Zaciatok kompilacie");
             ACPCompiler compiler = new ACPCompiler(acpModulesDirectory);
             CompilationSettings settings = new CompilationSettings();
             settings.setProjectConfigurationFile(projectFile);
             settings.setLibraryName(getLibraryName());
             settings.setOutputLibraryPath(arduinoLibraryDirectory);
             settings.setDebugMode(IdeSettings.getInstance().getDebugMode());
-            console.println("Koniec nastaveni");
             compiler.compile(settings);
-            console.println("Hotovo");
             return true;
         } catch (CompilationException e) {
             console.errln(e.getMessage());
@@ -148,16 +144,15 @@ public class IdeProject {
         proccess += " --verify";
         proccess += " --board " + "arduino:avr:uno";
         proccess += " --pref build.path=" + getProjectInoFile().getParentFile().getPath() + "\\build";
-        proccess += " --verbose";
+        //proccess += " --verbose";
         proccess += " " + getProjectInoFile();
 
         int ret = console.runProccess(proccess);
         if (ret == 0) {
-            console.println("Hotovo");
             return true;
         }
 
-        console.println("Chyba, skontrolujte konzolu pre viac informácií.");
+        console.errln("Chyba, skontrolujte konzolu pre viac informácií.");
         return false;
     }
 
@@ -167,16 +162,15 @@ public class IdeProject {
         proccess += " --board " + "arduino:avr:uno";
         proccess += " --port " + serialPort;
         proccess += " --pref build.path=" + getProjectInoFile().getParentFile().getPath() + "\\build";
-        proccess += " --verbose";
+        //proccess += " --verbose";
         proccess += " " + getProjectInoFile();
 
         int ret = console.runProccess(proccess);
         if (ret == 0) {
-            console.println("Hotovo");
             return true;
         }
 
-        console.println("Chyba, skontrolujte konzolu pre viac informácií.");
+        console.errln("Chyba, skontrolujte konzolu pre viac informácií.");
         return false;
     }
 }

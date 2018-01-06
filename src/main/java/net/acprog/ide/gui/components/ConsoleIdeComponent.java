@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 
 public class ConsoleIdeComponent implements IdeComponent, ConsoleInterface {
     private final EditorFrame editorFrame;
+    private final int consoleMaxLength = 10000;
 
     private JScrollPane panel;
     private JTextPane textPane;
@@ -54,6 +55,14 @@ public class ConsoleIdeComponent implements IdeComponent, ConsoleInterface {
         aset = sc.addAttribute(aset, StyleConstants.Alignment, StyleConstants.ALIGN_JUSTIFIED);
 
         int len = tp.getDocument().getLength();
+        if (len > consoleMaxLength) {
+            try {
+                tp.getDocument().remove(0, len - consoleMaxLength);
+            } catch (BadLocationException e) {
+
+            }
+            len = tp.getDocument().getLength();
+        }
         tp.setCaretPosition(len);
         tp.setCharacterAttributes(aset, false);
         tp.replaceSelection(msg);
@@ -81,14 +90,27 @@ public class ConsoleIdeComponent implements IdeComponent, ConsoleInterface {
         appendToPane(textPane, "> " + proccess + "\n", Color.GRAY);
         return ProcessUtils.run(proccess, (process) -> {
             BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            try {
-                while ((line = input.readLine()) != null) {
-                    println(line);
+            BufferedReader inputErr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            new Thread(() -> {
+                String line;
+                try {
+                    while ((line = input.readLine()) != null) {
+                        println(line);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            }).start();
+            new Thread(() -> {
+                String line;
+                try {
+                    while ((line = inputErr.readLine()) != null) {
+                        errln(line);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }).start();
         });
     }
 }

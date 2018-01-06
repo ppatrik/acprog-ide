@@ -9,16 +9,18 @@ import net.acprog.ide.utils.ACPModules;
 import net.acprog.ide.utils.event.EventType;
 
 import javax.swing.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeSelectionModel;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ToolBoxIdeComponent implements IdeComponent, TreeSelectionListener {
+public class ToolBoxIdeComponent implements IdeComponent, MouseListener, KeyListener {
     private final EditorFrame editorFrame;
 
     protected JTree tree;
@@ -91,7 +93,8 @@ public class ToolBoxIdeComponent implements IdeComponent, TreeSelectionListener 
         createNodes(top);
         tree = new JTree(top);
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-        tree.addTreeSelectionListener(this);
+        tree.addMouseListener(this);
+        tree.addKeyListener(this);
         expandAllNodes(tree, 0, tree.getRowCount());
 
         scrollPane = new JScrollPane(tree);
@@ -111,9 +114,7 @@ public class ToolBoxIdeComponent implements IdeComponent, TreeSelectionListener 
         return editorFrame;
     }
 
-    @Override
-    public void valueChanged(TreeSelectionEvent e) {
-        //TODO: vybrat len ked bolo kliknute alebo stlaceny enter
+    public void addSelectedComponent() {
         DefaultMutableTreeNode node = (DefaultMutableTreeNode)
                 tree.getLastSelectedPathComponent();
 
@@ -124,6 +125,50 @@ public class ToolBoxIdeComponent implements IdeComponent, TreeSelectionListener 
         if (node.isLeaf()) {
             ToolBoxComponent toolBoxComponent = (ToolBoxComponent) nodeInfo;
             getEditorFrame().getEventManager().callEvent(EventType.COMPONENT_CREATE, toolBoxComponent.getModule());
+        }
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        if (e.getClickCount() == 2) {
+            addSelectedComponent();
+        }
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+            addSelectedComponent();
         }
     }
 }

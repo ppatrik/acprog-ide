@@ -42,9 +42,9 @@ public class VisualEditorIdeComponent implements IdeComponent {
 
         // vlozenie komponentov do plochy
         Project project = editorFrame.getIdeProject().getProject();
-        for (Component component : project.getComponents()) {
+        /*for (Component component : project.getComponents()) {
             scrollPane.add(component);
-        }
+        }*/
         editorFrame.getEventManager().registerObserver(EventType.COMPONENT_CREATE, this::componentCreateEvent);
     }
 
@@ -63,7 +63,7 @@ public class VisualEditorIdeComponent implements IdeComponent {
 
         // vlozenie komponentu do projektu
         Project project = editorFrame.getIdeProject().getProject();
-        project.addComponent(myComponent);
+        project.addComponent(myComponent, null);
         scrollPane.add(myComponent);
         scrollPane.updateUI();
 

@@ -51,8 +51,8 @@ public class EditorIdeComponent implements IdeComponent {
             if (doc.getLength() != 0) {
                 for (int line = 0; line < root.getElementCount(); line++) {
                     Token t = doc.getTokenListForLine(line);
-                    EditorFrame.instance.console.println(t.toString());
-                    EditorFrame.instance.console.errln("-----");
+                    //EditorFrame.instance.console.println(t.toString());
+                    //EditorFrame.instance.console.errln("-----");
 
                     DefaultParserNotice pn = new DefaultParserNotice(this, "Skuska", line, 592, 8);
                     pn.setLevel(ParserNotice.Level.ERROR);

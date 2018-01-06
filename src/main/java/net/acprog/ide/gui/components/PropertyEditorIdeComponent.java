@@ -49,6 +49,9 @@ public class PropertyEditorIdeComponent implements IdeComponent {
 
     private void setModelProperties() {
         propertiesPanel.setModel(null);
+        if (projectComponent == null) {
+            return;
+        }
         Module module = ACPModules.getModule(projectComponent.getParentComponent());
         if (!(module instanceof ComponentType)) {
             return;

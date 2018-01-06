@@ -1,12 +1,17 @@
 package net.acprog.ide.gui;
 
+import bibliothek.extension.gui.dock.theme.EclipseTheme;
+import bibliothek.gui.DockTheme;
 import bibliothek.gui.dock.common.CControl;
 import bibliothek.gui.dock.common.CLocation;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
+import net.acprog.builder.modules.Module;
 import net.acprog.ide.App;
+import net.acprog.ide.configurations.Component;
 import net.acprog.ide.configurations.IdeProject;
 import net.acprog.ide.configurations.IdeSettings;
+import net.acprog.ide.configurations.Project;
 import net.acprog.ide.gui.components.*;
 import net.acprog.ide.gui.utils.ConsoleIde;
 import net.acprog.ide.platform.Platform;
@@ -24,9 +29,7 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
 import java.util.List;
 
 public class EditorFrame extends JFrame {
@@ -90,6 +93,8 @@ public class EditorFrame extends JFrame {
         eventManager.registerObserver(EventType.HELP_SLACK, this::helpSlack);
         eventManager.registerObserver(EventType.HELP_UPDATE, this::helpUpdate);
         eventManager.registerObserver(EventType.PREFERENCES_OPEN, this::openPreferences);
+        eventManager.registerObserver(EventType.COMPONENT_CREATE, this::componentCreateEvent);
+        eventManager.registerObserver(EventType.COMPONENT_DELETE, this::componentDeleteEvent);
     }
 
     private void openPreferences(EventType eventType, Object o) {
@@ -116,6 +121,7 @@ public class EditorFrame extends JFrame {
             e.printStackTrace();
         }
         dispose();
+        System.exit(0);
     }
 
     private void helpUpdate(EventType eventType, Object o) {
@@ -217,6 +223,8 @@ public class EditorFrame extends JFrame {
 
         control = new CControl(this);
         panel.add(control.getContentArea(), BorderLayout.CENTER);
+        DockTheme eclipseTheme = new EclipseTheme();
+        control.getController().setTheme(eclipseTheme);
 
         IdeComponent c;
         SingleCDockable dockable;
@@ -228,10 +236,11 @@ public class EditorFrame extends JFrame {
         dockable.setLocation(CLocation.base().normalWest(0.25));
         dockable.setVisible(true);
 
-        c = new VisualEditorIdeComponent(this);
+        //c = new VisualEditorIdeComponent(this);
+        c = new VisualGroupEditorIdeComponent(this);
         dockable = c.dockable();
         control.addDockable(dockable);
-        dockable.setLocation(CLocation.base().normalWest(0.25));
+        dockable.setLocation(CLocation.base().aside());
         dockable.setVisible(true);
 
         c = new EditorIdeComponent(this);
@@ -352,6 +361,39 @@ public class EditorFrame extends JFrame {
         return eventManager;
     }
 
+    public void componentCreateEvent(EventType eventType, Object o) {
+        int uniqueId = 1;
+        Module module = (Module) o;
+        String variableName = module.getName();
+        variableName = variableName.replace('.', '_');
+
+        // najdenie unikatneho nazvu pre komponent
+        Map<String, Component> componentMap = getIdeProject().getProject().getComponentsMap();
+        while (componentMap.containsKey(variableName + "" + uniqueId)) {
+            uniqueId++;
+        }
+        variableName += uniqueId;
+
+        // vytvorenie komponentu
+        net.acprog.builder.project.Component component = new net.acprog.builder.project.Component();
+        component.setType(module.getName());
+        component.setName(variableName);
+        net.acprog.ide.configurations.Component myComponent = new Component(component);
+
+        // vlozenie komponentu do projektu
+        Project project = IdeProject.getInstance().getProject();
+        project.addComponent(myComponent, null);
+
+        getEventManager().callEvent(EventType.COMPONENT_SELECTED, myComponent);
+        getEventManager().callEvent(EventType.PROJECT_CHANGED);
+    }
+
+    public void componentDeleteEvent(EventType eventType, Object o) {
+        // vymazania komponentu z projektu
+        Project project = IdeProject.getInstance().getProject();
+        project.removeComponent((net.acprog.ide.configurations.Component) o);
+        getEventManager().callEvent(EventType.PROJECT_CHANGED);
+    }
 
     private void populateBoardMenu() {
         boardMenu.removeAll();
@@ -367,7 +409,6 @@ public class EditorFrame extends JFrame {
 
         boardMenu.setEnabled(boardMenu.getMenuComponentCount() > 0);
     }
-
 
     private final static List<String> BOARD_PROTOCOLS_ORDER = Arrays.asList("serial", "network");
     private final static List<String> BOARD_PROTOCOLS_ORDER_TRANSLATIONS = Arrays.asList("Serial ports", "Network ports");
