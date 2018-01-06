@@ -265,6 +265,8 @@ public class EditorFrame extends JFrame {
 
     private JMenu portMenu;
 
+    private JMenu boardMenu;
+
     private void InitializeMenuBar() {
         menuBar = new JMenuBar();
 
@@ -303,12 +305,17 @@ public class EditorFrame extends JFrame {
         menu.setMnemonic(KeyEvent.VK_T);
         menu.addMenuListener(new StubMenuListener() {
             public void menuSelected(MenuEvent e) {
+                populateBoardMenu();
                 populatePortMenu();
             }
         });
         menuBar.add(menu);
 
         // region Build Tools submenu
+        boardMenu = new JMenu("Board");
+        populateBoardMenu();
+        menu.add(boardMenu);
+
         portMenu = new JMenu("Port");
         populatePortMenu();
         menu.add(portMenu);
@@ -344,6 +351,23 @@ public class EditorFrame extends JFrame {
     public EventManager getEventManager() {
         return eventManager;
     }
+
+
+    private void populateBoardMenu() {
+        boardMenu.removeAll();
+        List<String> boards = IdeSettings.getInstance().getAvailableBoards();
+        String selectedBoard = IdeProject.getInstance().getProject().getPlatformName();
+        Collections.sort(boards);
+
+        for (String board : boards) {
+            JCheckBoxMenuItem item = new JCheckBoxMenuItem(board, board.equals(selectedBoard));
+            item.addActionListener(new BoardMenuListener(board));
+            boardMenu.add(item);
+        }
+
+        boardMenu.setEnabled(boardMenu.getMenuComponentCount() > 0);
+    }
+
 
     private final static List<String> BOARD_PROTOCOLS_ORDER = Arrays.asList("serial", "network");
     private final static List<String> BOARD_PROTOCOLS_ORDER_TRANSLATIONS = Arrays.asList("Serial ports", "Network ports");
@@ -405,6 +429,20 @@ public class EditorFrame extends JFrame {
 
         public void actionPerformed(ActionEvent e) {
             IdeSettings.getInstance().setSerialPort(serialPort);
+        }
+
+    }
+
+    class BoardMenuListener implements ActionListener {
+
+        private final String board;
+
+        public BoardMenuListener(String board) {
+            this.board = board;
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            IdeProject.getInstance().getProject().setPlatformName(board);
         }
 
     }

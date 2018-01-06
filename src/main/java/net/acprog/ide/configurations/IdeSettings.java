@@ -22,6 +22,7 @@ public class IdeSettings {
     private static final int MAX_LAST_PROJECTS = 10;
 
     private static IdeSettings ourInstance = new IdeSettings();
+    private List<String> availableBoards = null;
 
     public static IdeSettings getInstance() {
         return ourInstance;
@@ -204,5 +205,15 @@ public class IdeSettings {
 
     public void setSerialPort(String serialPort) {
         this.serialPort = serialPort;
+    }
+
+    public List<String> getAvailableBoards() {
+        if (availableBoards == null) {
+            availableBoards = new ArrayList<>();
+            availableBoards.add("Arduino");
+            availableBoards.add("ArduinoUno");
+            availableBoards.add("ArduinoMega");
+        }
+        return availableBoards;
     }
 }
