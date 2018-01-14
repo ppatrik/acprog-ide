@@ -1,6 +1,6 @@
 package net.acprog.ide.gui.components;
 
-import net.acprog.ide.configurations.Component;
+import net.acprog.ide.project.ComponentProxy;
 import net.acprog.ide.utils.event.EventType;
 
 import javax.swing.*;
@@ -12,7 +12,7 @@ import java.awt.event.MouseMotionListener;
 
 public class ProjectComponent extends JButton implements MouseMotionListener, ActionListener {
 
-    protected Component projectComponent;
+    protected ComponentProxy projectComponent;
     protected VisualEditorIdeComponent visualEditorIdeComponent;
 
     /**
@@ -36,7 +36,7 @@ public class ProjectComponent extends JButton implements MouseMotionListener, Ac
      */
     protected boolean overbearing = false;
 
-    public ProjectComponent(VisualEditorIdeComponent visualEditorIdeComponent, Component projectComponent) {
+    public ProjectComponent(VisualEditorIdeComponent visualEditorIdeComponent, ComponentProxy projectComponent) {
         super();
 
         this.visualEditorIdeComponent = visualEditorIdeComponent;
@@ -71,8 +71,8 @@ public class ProjectComponent extends JButton implements MouseMotionListener, Ac
         Point position = new Point(mouseOnScreen.x - parentOnScreen.x - anchorX, mouseOnScreen.y - parentOnScreen.y - anchorY);
         position.x = Math.max(position.x, 0);
         position.y = Math.max(position.y, 0);
-        projectComponent.setLeft(position.x);
-        projectComponent.setTop(position.y);
+        //projectComponent.setLeft(position.x);
+        //projectComponent.setTop(position.y);
         setLocation(position);
         Dimension minSize = parent.getMinimumSize();
         int width = Math.max(minSize.width,
@@ -87,7 +87,7 @@ public class ProjectComponent extends JButton implements MouseMotionListener, Ac
     public void updateUI() {
         if (projectComponent != null) {
             setText(projectComponent.getName());
-            setBounds(projectComponent.getLeft(), projectComponent.getTop(), projectComponent.getWidth(), projectComponent.getHeight());
+            //setBounds(projectComponent.getLeft(), projectComponent.getTop(), projectComponent.getWidth(), projectComponent.getHeight());
         }
         super.updateUI();
     }

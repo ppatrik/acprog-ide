@@ -8,13 +8,13 @@ import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
 import net.acprog.builder.modules.Module;
 import net.acprog.ide.App;
-import net.acprog.ide.configurations.Component;
 import net.acprog.ide.configurations.IdeProject;
 import net.acprog.ide.configurations.IdeSettings;
-import net.acprog.ide.configurations.Project;
 import net.acprog.ide.gui.components.*;
 import net.acprog.ide.gui.utils.ConsoleIde;
 import net.acprog.ide.platform.Platform;
+import net.acprog.ide.project.ComponentProxy;
+import net.acprog.ide.project.ProjectProxy;
 import net.acprog.ide.utils.BoardPort;
 import net.acprog.ide.utils.event.EventManager;
 import net.acprog.ide.utils.event.EventType;
@@ -276,6 +276,8 @@ public class EditorFrame extends JFrame {
 
     private JMenu boardMenu;
 
+    private JMenu debugMenu;
+
     private void InitializeMenuBar() {
         menuBar = new JMenuBar();
 
@@ -316,6 +318,7 @@ public class EditorFrame extends JFrame {
             public void menuSelected(MenuEvent e) {
                 populateBoardMenu();
                 populatePortMenu();
+                populateDebugMenu();
             }
         });
         menuBar.add(menu);
@@ -328,6 +331,10 @@ public class EditorFrame extends JFrame {
         portMenu = new JMenu("Port");
         populatePortMenu();
         menu.add(portMenu);
+
+        debugMenu = new JMenu("Debug mode");
+        populateDebugMenu();
+        menu.add(debugMenu);
 
         // endregion
 
@@ -368,7 +375,7 @@ public class EditorFrame extends JFrame {
         variableName = variableName.replace('.', '_');
 
         // najdenie unikatneho nazvu pre komponent
-        Map<String, Component> componentMap = getIdeProject().getProject().getComponentsMap();
+        Map<String, ComponentProxy> componentMap = getIdeProject().getProject().getComponentsMap();
         while (componentMap.containsKey(variableName + "" + uniqueId)) {
             uniqueId++;
         }
@@ -378,10 +385,10 @@ public class EditorFrame extends JFrame {
         net.acprog.builder.project.Component component = new net.acprog.builder.project.Component();
         component.setType(module.getName());
         component.setName(variableName);
-        net.acprog.ide.configurations.Component myComponent = new Component(component);
+        ComponentProxy myComponent = new ComponentProxy(component);
 
         // vlozenie komponentu do projektu
-        Project project = IdeProject.getInstance().getProject();
+        ProjectProxy project = IdeProject.getInstance().getProject();
         project.addComponent(myComponent, null);
 
         getEventManager().callEvent(EventType.COMPONENT_SELECTED, myComponent);
@@ -390,9 +397,23 @@ public class EditorFrame extends JFrame {
 
     public void componentDeleteEvent(EventType eventType, Object o) {
         // vymazania komponentu z projektu
-        Project project = IdeProject.getInstance().getProject();
-        project.removeComponent((net.acprog.ide.configurations.Component) o);
+        ProjectProxy project = IdeProject.getInstance().getProject();
+        project.removeComponent((ComponentProxy) o);
         getEventManager().callEvent(EventType.PROJECT_CHANGED);
+    }
+
+
+    private void populateDebugMenu() {
+        debugMenu.removeAll();
+
+        JCheckBoxMenuItem item = new JCheckBoxMenuItem("Enabled", IdeSettings.getInstance().getDebugMode());
+        item.addActionListener(new DebugMenuListener(true));
+        debugMenu.add(item);
+
+        item = new JCheckBoxMenuItem("Disabled", !IdeSettings.getInstance().getDebugMode());
+        item.addActionListener(new DebugMenuListener(false));
+        debugMenu.add(item);
+
     }
 
     private void populateBoardMenu() {
@@ -484,6 +505,20 @@ public class EditorFrame extends JFrame {
 
         public void actionPerformed(ActionEvent e) {
             IdeProject.getInstance().getProject().setPlatformName(board);
+        }
+
+    }
+
+    class DebugMenuListener implements ActionListener {
+
+        private final boolean debug;
+
+        public DebugMenuListener(boolean debug) {
+            this.debug = debug;
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            IdeSettings.getInstance().setDebugMode(debug);
         }
 
     }

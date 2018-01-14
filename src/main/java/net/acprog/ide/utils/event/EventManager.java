@@ -1,10 +1,11 @@
 package net.acprog.ide.utils.event;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class EventManager {
-    private final Map<EventType, ObserverManager> m_observerManagers = new HashMap<>();
+
+    private final Map<EventType, ObserverManager> m_observerManagers = new ConcurrentHashMap<>();
 
     public void registerObserver(EventType eventType, Observer observer) {
         synchronized (m_observerManagers) {

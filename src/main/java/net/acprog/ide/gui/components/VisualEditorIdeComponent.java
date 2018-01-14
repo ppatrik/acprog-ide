@@ -3,9 +3,9 @@ package net.acprog.ide.gui.components;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
 import net.acprog.builder.modules.Module;
-import net.acprog.ide.configurations.Component;
-import net.acprog.ide.configurations.Project;
 import net.acprog.ide.gui.EditorFrame;
+import net.acprog.ide.project.ComponentProxy;
+import net.acprog.ide.project.ProjectProxy;
 import net.acprog.ide.utils.event.EventType;
 
 import javax.swing.*;
@@ -28,7 +28,7 @@ public class VisualEditorIdeComponent implements IdeComponent {
             setViewportView(panel);
         }
 
-        void add(Component component) {
+        void add(ComponentProxy component) {
             ProjectComponent pc = new ProjectComponent(VisualEditorIdeComponent.this, component);
             panel.add(pc);
         }
@@ -41,7 +41,7 @@ public class VisualEditorIdeComponent implements IdeComponent {
         InitializeComponents();
 
         // vlozenie komponentov do plochy
-        Project project = editorFrame.getIdeProject().getProject();
+        ProjectProxy project = editorFrame.getIdeProject().getProject();
         /*for (Component component : project.getComponents()) {
             scrollPane.add(component);
         }*/
@@ -55,14 +55,14 @@ public class VisualEditorIdeComponent implements IdeComponent {
         net.acprog.builder.project.Component component = new net.acprog.builder.project.Component();
         component.setType(module.getName());
         component.setName(module.getName() + " 1");
-        Component myComponent = new Component(component);
-        myComponent.setLeft(0);
+        ComponentProxy myComponent = new ComponentProxy(component);
+        /*myComponent.setLeft(0);
         myComponent.setTop(0);
         myComponent.setWidth(100);
-        myComponent.setHeight(25);
+        myComponent.setHeight(25);*/
 
         // vlozenie komponentu do projektu
-        Project project = editorFrame.getIdeProject().getProject();
+        ProjectProxy project = editorFrame.getIdeProject().getProject();
         project.addComponent(myComponent, null);
         scrollPane.add(myComponent);
         scrollPane.updateUI();

@@ -1,6 +1,9 @@
-package net.acprog.ide.configurations;
+package net.acprog.ide.project;
 
 import net.acprog.builder.components.ConfigurationException;
+import net.acprog.builder.modules.ComponentType;
+import net.acprog.builder.modules.Module;
+import net.acprog.builder.project.Project;
 import net.acprog.builder.utils.XmlUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -15,19 +18,25 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.util.*;
 
-public class Project {
+public class ProjectProxy implements ComponentInterface {
 
     private final Group undefinedGroup = new Group("undefined group");
 
     public class Group {
         public String name;
+        public boolean projectComponentGroup;
         public boolean expanded;
 
         public Group() {
         }
 
         public Group(String name) {
+            this(name, false);
+        }
+
+        public Group(String name, boolean projectComponentGroup) {
             this.name = name;
+            this.projectComponentGroup = projectComponentGroup;
         }
 
         @Override
@@ -43,9 +52,11 @@ public class Project {
 
     protected net.acprog.builder.project.Project parentProject;
 
-    protected Map<Project.Group, List<Component>> components = new LinkedHashMap<>();
+    protected Map<String, String> properties;
 
-    public Project(net.acprog.builder.project.Project parentProject) {
+    protected Map<ProjectProxy.Group, List<ComponentInterface>> components = new LinkedHashMap<>();
+
+    public ProjectProxy(net.acprog.builder.project.Project parentProject) {
         this.parentProject = parentProject;
     }
 
@@ -53,50 +64,54 @@ public class Project {
     // GETTERS / SETTERS
     // --------------------------------------------------------------------------------------
 
-    public Map<Group, List<Component>> getComponents() {
+    public Map<Group, List<ComponentInterface>> getComponents() {
         return components;
     }
 
-    public Map<String, Component> getComponentsMap() {
-        Map<String, Component> map = new HashMap<>();
+    public Map<String, ComponentProxy> getComponentsMap() {
+        Map<String, ComponentProxy> map = new HashMap<>();
 
-        List<Component> components = new ArrayList<>();
+        List<ComponentProxy> components = new ArrayList<>();
         for (net.acprog.builder.project.Component component : parentProject.getComponents()) {
-            components.add(new Component(component));
+            components.add(new ComponentProxy(component));
         }
-        for (Component component : components) {
+        for (ComponentProxy component : components) {
             map.put(component.getName(), component);
         }
 
         return map;
     }
 
-    public void addComponent(Component component, Group group) {
+    public void addComponent(ComponentProxy component, Group group) {
         if (group == null) {
             group = undefinedGroup;
         }
         if (!components.containsKey(group)) {
             components.put(group, new ArrayList<>());
         }
-        List<Component> groupComponents = components.get(group);
+        List<ComponentInterface> groupComponents = components.get(group);
         groupComponents.add(component);
         parentProject.getComponents().add(component.getParentComponent());
     }
 
-    public void moveComponent(Component component, Group newGroup) {
+    public void moveComponent(ComponentProxy component, Group newGroup) {
         removeComponent(component);
         addComponent(component, newGroup);
     }
 
-    public void removeComponent(Component component) {
-        for (Map.Entry<Group, List<Component>> entry : components.entrySet()) {
+    public void removeComponent(ComponentProxy component) {
+        for (Map.Entry<Group, List<ComponentInterface>> entry : components.entrySet()) {
             entry.getValue().remove(component);
         }
         parentProject.getComponents().remove(component.getParentComponent());
     }
 
-    public Map<String, String> getProgramEvents() {
-        return parentProject.getProgramEvents();
+    public String getPlatformName() {
+        return parentProject.getPlatformName();
+    }
+
+    public void setPlatformName(String platformName) {
+        properties.replace("PlatformName", platformName);
     }
 
     public List<String> getLibraryImports() {
@@ -107,38 +122,73 @@ public class Project {
         return parentProject.getEepromItems();
     }
 
-    public String getPlatformName() {
-        return parentProject.getPlatformName();
+    @Override
+    public Map<String, String> getProperties() {
+        return properties;
     }
 
-    public void setPlatformName(String platformName) {
-        parentProject.setPlatformName(platformName);
+    @Override
+    public Map<String, String> getEvents() {
+        return parentProject.getProgramEvents();
     }
 
-    public int getWatchdogLevel() {
-        return parentProject.getWatchdogLevel();
+    @Override
+    public String getName() {
+        return "Project component";
     }
 
-    public void setWatchdogLevel(int watchdogLevel) {
-        parentProject.setWatchdogLevel(watchdogLevel);
+    @Override
+    public void setName(String name) {
+        throw new RuntimeException("You cannot change project component name.");
     }
 
-    public String getEepromLayoutVersion() {
-        return parentProject.getEepromLayoutVersion();
+    @Override
+    public String getType() {
+        return "project";
     }
 
-    public void setEepromLayoutVersion(String eepromLayoutVersion) {
-        parentProject.setEepromLayoutVersion(eepromLayoutVersion);
+    @Override
+    public void setType(String type) {
+        throw new RuntimeException("Project component type cannot be changed.");
     }
+
+    @Override
+    public String getDescription() {
+        return "Runtime configurations for your project.";
+    }
+
+    @Override
+    public void setDescription(String description) {
+        throw new RuntimeException("Project component description cannot be changed.");
+    }
+
+    @Override
+    public Module getModuleInstance() {
+        return ComponentType.loadFromFile(new File("project-component.xml"));
+    }
+
 
     // --------------------------------------------------------------------------------------
     // IDE CONFIGURATION READER
     // --------------------------------------------------------------------------------------
 
     private void readConfiguration(Element xmlRoot) {
+        // Initialize project properties
+        properties = new HashMap<>();
+        properties.put("EepromLayoutVersion", parentProject.getEepromLayoutVersion());
+        properties.put("PlatformName", parentProject.getPlatformName());
+        properties.put("WatchdogLevel", Integer.toString(parentProject.getWatchdogLevel()));
+
+        // Read components to groups
         components = new LinkedHashMap<>();
 
-        Map<String, Component> componentsMap = getComponentsMap();
+        // Insert project component group
+        List<ComponentInterface> projectComponentGroupList = new ArrayList<ComponentInterface>(1);
+        projectComponentGroupList.add(this);
+        components.put(new Group("Project component group", true), projectComponentGroupList);
+
+        // Add all other components
+        Map<String, ComponentProxy> componentsMap = getComponentsMap();
         Map<String, Boolean> selectedComponents = new LinkedHashMap<>();
 
         Element groupsWrapper = XmlUtils.getChildElement(xmlRoot, "groups");
@@ -146,10 +196,10 @@ public class Project {
             Group newGroup = new Group();
             newGroup.name = XmlUtils.getSimpleAttributeValue(xmlGroup, "name", null);
             newGroup.expanded = "true".equals(XmlUtils.getSimpleAttributeValue(xmlGroup, "expanded", "true"));
-            List<Component> newGroupComponentsList = new ArrayList<>();
+            List<ComponentInterface> newGroupComponentsList = new ArrayList<>();
             for (Element groupComponent : XmlUtils.getChildElements(xmlGroup, "component")) {
                 String componentName = XmlUtils.getElementValue(groupComponent, null);
-                Component component = componentsMap.getOrDefault(componentName, null);
+                ComponentInterface component = componentsMap.getOrDefault(componentName, null);
                 if (component != null) {
                     newGroupComponentsList.add(component);
                     selectedComponents.put(componentName, true);
@@ -158,8 +208,8 @@ public class Project {
             components.put(newGroup, newGroupComponentsList);
         }
 
-        List<Component> newGroupComponentsList = new ArrayList<>();
-        for (Map.Entry<String, Component> entry : componentsMap.entrySet()) {
+        List<ComponentInterface> newGroupComponentsList = new ArrayList<>();
+        for (Map.Entry<String, ComponentProxy> entry : componentsMap.entrySet()) {
             if (!selectedComponents.containsKey(entry.getKey())) {
                 newGroupComponentsList.add(entry.getValue());
             }
@@ -169,8 +219,8 @@ public class Project {
         }
     }
 
-    public static Project loadFromFile(File xmlFile) {
-        net.acprog.builder.project.Project parentProject = net.acprog.builder.project.Project.loadFromFile(xmlFile);
+    public static ProjectProxy loadFromFile(File xmlFile) {
+        Project parentProject = Project.loadFromFile(xmlFile);
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setIgnoringComments(true);
@@ -179,7 +229,7 @@ public class Project {
         try {
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc = db.parse(xmlFile);
-            Project result = new Project(parentProject);
+            ProjectProxy result = new ProjectProxy(parentProject);
             Element xmlRoot = doc.getDocumentElement();
             Element ideXmlRoot = XmlUtils.getChildElement(xmlRoot, "ide");
 
@@ -199,6 +249,10 @@ public class Project {
     // --------------------------------------------------------------------------------------
 
     public boolean saveToFile(File xmlFile) {
+        parentProject.setPlatformName(properties.get("PlatformName"));
+        parentProject.setWatchdogLevel(Integer.parseInt(properties.get("WatchdogLevel")));
+        parentProject.setEepromLayoutVersion(properties.get("EepromLayoutVersion"));
+
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setIgnoringComments(true);
         dbf.setCoalescing(true);
@@ -232,14 +286,14 @@ public class Project {
         Document doc = xmlIdeElement.getOwnerDocument();
         int output = 0;
         Element groupsElement = doc.createElement("groups");
-        for (Map.Entry<Group, List<Component>> entry : getComponents().entrySet()) {
-            if (undefinedGroup.equals(entry.getKey())) {
+        for (Map.Entry<Group, List<ComponentInterface>> entry : getComponents().entrySet()) {
+            if (undefinedGroup.equals(entry.getKey()) || entry.getKey().projectComponentGroup) {
                 continue;
             }
             Element groupElement = doc.createElement("group");
             groupElement.setAttribute("name", entry.getKey().name);
             groupElement.setAttribute("expanded", Boolean.toString(entry.getKey().expanded));
-            for (Component component : entry.getValue()) {
+            for (ComponentInterface component : entry.getValue()) {
                 Element componentElement = doc.createElement("component");
                 componentElement.setTextContent(component.getName());
                 groupElement.appendChild(componentElement);

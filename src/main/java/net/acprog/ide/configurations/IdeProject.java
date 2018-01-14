@@ -8,6 +8,7 @@ import net.acprog.builder.utils.FileUtils;
 import net.acprog.ide.IdeException;
 import net.acprog.ide.gui.utils.ConsoleIde;
 import net.acprog.ide.gui.utils.ConsoleInterface;
+import net.acprog.ide.project.ProjectProxy;
 
 import java.io.*;
 
@@ -19,7 +20,7 @@ public class IdeProject {
     }
 
     private File projectFolder = null;
-    private Project project = null;
+    private ProjectProxy project = null;
     private File source = null;
     private String sourceString = null;
     private boolean opened = false;
@@ -49,7 +50,7 @@ public class IdeProject {
 
     private void openProjectDefinition() throws IdeException {
         try {
-            project = Project.loadFromFile(getProjectXmlFile());
+            project = ProjectProxy.loadFromFile(getProjectXmlFile());
         } catch (ConfigurationException e) {
             throw new IdeException(e.getMessage());
         }
@@ -101,7 +102,7 @@ public class IdeProject {
         return sourceString;
     }
 
-    public Project getProject() {
+    public ProjectProxy getProject() {
         return project;
     }
 

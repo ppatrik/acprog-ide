@@ -18,8 +18,19 @@ import java.util.List;
 
 public class IdeSettings {
     private static final String SETTINGS_FILENAME = "acp_settings.xml";
-    private static final String XML_ROOT_ELEMENT = "ide-settings";
-    private static final int MAX_LAST_PROJECTS = 10;
+
+    // region XML element names
+    private static final String XML_EL_ROOT = "ide-settings";
+    private static final String XML_EL_ACPROG_MODULES = "acprog-modules-folder";
+    private static final String XML_EL_ARDUINO_CLI = "arduino-cli";
+    private static final String XML_EL_ARDUINO_LIBRARY = "arduino-library-folder";
+    private static final String XML_EL_SERIAL_PORT = "serial-port";
+    private static final String XML_EL_DEBUG_MODE = "debug-mode";
+    private static final String XML_EL_RECENT_PROJECTS = "recent-projects";
+    private static final String XML_EL_PROJECT = "project";
+    // endregion
+
+    private static final int MAX_RECENT_PROJECTS = 10;
 
     private static IdeSettings ourInstance = new IdeSettings();
     private List<String> availableBoards = null;
@@ -36,7 +47,7 @@ public class IdeSettings {
     private String arduinoLibraryFolder;
     private String acprogModulesFolder;
     private String arduinoCli;
-    private List<IdeSettingsProject> lastProjects;
+    private List<IdeSettingsProject> recentProjects;
 
     private IdeSettings() {
         loadSettingsFromFile();
@@ -61,23 +72,23 @@ public class IdeSettings {
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc = db.parse(xmlFile);
             Element xmlRoot = doc.getDocumentElement();
-            Element ideXmlRoot = XmlUtils.getChildElement(xmlRoot, XML_ROOT_ELEMENT);
-            acprogModulesFolder = XmlUtils.getChildElement(xmlRoot, "acprog-modules-folder").getTextContent();
-            arduinoCli = XmlUtils.getChildElement(xmlRoot, "arduino-cli").getTextContent();
-            arduinoLibraryFolder = XmlUtils.getChildElement(xmlRoot, "arduino-library-folder").getTextContent();
+            Element ideXmlRoot = XmlUtils.getChildElement(xmlRoot, XML_EL_ROOT);
+            acprogModulesFolder = XmlUtils.getChildElement(xmlRoot, XML_EL_ACPROG_MODULES).getTextContent();
+            arduinoCli = XmlUtils.getChildElement(xmlRoot, XML_EL_ARDUINO_CLI).getTextContent();
+            arduinoLibraryFolder = XmlUtils.getChildElement(xmlRoot, XML_EL_ARDUINO_LIBRARY).getTextContent();
             try {
-                serialPort = XmlUtils.getChildElement(xmlRoot, "serial-port").getTextContent();
+                serialPort = XmlUtils.getChildElement(xmlRoot, XML_EL_SERIAL_PORT).getTextContent();
             } catch (Exception e) {
                 serialPort = null;
             }
-            debugMode = "true".equals(XmlUtils.getChildElement(xmlRoot, "debug-mode").getTextContent().toLowerCase());
-            lastProjects = new ArrayList<>();
-            Element lastProjectElementRoot = XmlUtils.getChildElement(xmlRoot, "last-projects");
+            debugMode = "true".equals(XmlUtils.getChildElement(xmlRoot, XML_EL_DEBUG_MODE).getTextContent().toLowerCase());
+            recentProjects = new ArrayList<>();
+            Element lastProjectElementRoot = XmlUtils.getChildElement(xmlRoot, XML_EL_RECENT_PROJECTS);
             if (lastProjectElementRoot != null) {
-                List<Element> elements = XmlUtils.getChildElements(lastProjectElementRoot, "project");
+                List<Element> elements = XmlUtils.getChildElements(lastProjectElementRoot, XML_EL_PROJECT);
                 if (elements != null) {
                     for (Element element : elements) {
-                        lastProjects.add(IdeSettingsProject.loadSettingsFromXml(element));
+                        recentProjects.add(IdeSettingsProject.loadSettingsFromXml(element));
                     }
                 }
             }
@@ -101,32 +112,32 @@ public class IdeSettings {
             Document doc = db.newDocument();
 
             // Write actual configuration to root node
-            Element xmlRoot = doc.createElement(XML_ROOT_ELEMENT);
+            Element xmlRoot = doc.createElement(XML_EL_ROOT);
             doc.appendChild(xmlRoot);
 
             Element el;
-            el = doc.createElement("acprog-modules-folder");
+            el = doc.createElement(XML_EL_ACPROG_MODULES);
             el.setTextContent(acprogModulesFolder);
             xmlRoot.appendChild(el);
 
-            el = doc.createElement("arduino-cli");
+            el = doc.createElement(XML_EL_ARDUINO_CLI);
             el.setTextContent(arduinoCli);
             xmlRoot.appendChild(el);
 
-            el = doc.createElement("arduino-library-folder");
+            el = doc.createElement(XML_EL_ARDUINO_LIBRARY);
             el.setTextContent(arduinoLibraryFolder);
             xmlRoot.appendChild(el);
 
-            el = doc.createElement("serial-port");
+            el = doc.createElement(XML_EL_SERIAL_PORT);
             el.setTextContent(serialPort);
             xmlRoot.appendChild(el);
 
-            el = doc.createElement("debug-mode");
-            el.setTextContent(debugMode ? "true" : "false");
+            el = doc.createElement(XML_EL_DEBUG_MODE);
+            el.setTextContent(Boolean.toString(debugMode));
             xmlRoot.appendChild(el);
 
-            el = doc.createElement("last-projects");
-            for (IdeSettingsProject project : lastProjects) {
+            el = doc.createElement(XML_EL_RECENT_PROJECTS);
+            for (IdeSettingsProject project : recentProjects) {
                 el.appendChild(project.saveToXml(doc));
             }
             xmlRoot.appendChild(el);
@@ -141,7 +152,7 @@ public class IdeSettings {
             transformer.transform(source, result);
 
         } catch (Exception e) {
-            throw new ConfigurationException("Loading of project configuration failed.", e);
+            throw new ConfigurationException("Saving configuration failed.", e);
         }
     }
 
@@ -181,19 +192,23 @@ public class IdeSettings {
         return initializedEmpty;
     }
 
-    public IdeSettingsProject getLatestProject() {
-        if (lastProjects.size() >= 1) {
-            return lastProjects.get(lastProjects.size() - 1);
+    public IdeSettingsProject getRecentProject() {
+        if (recentProjects.size() >= 1) {
+            return recentProjects.get(recentProjects.size() - 1);
         }
         return null;
     }
 
-    public void addLastProject(IdeSettingsProject ideSettingsProject) {
-        lastProjects.remove(ideSettingsProject);
-        lastProjects.add(ideSettingsProject);
-        if (lastProjects.size() > MAX_LAST_PROJECTS) {
-            for (int i = 0; i < lastProjects.size() - MAX_LAST_PROJECTS; i++) {
-                lastProjects.remove(0);
+    public List<IdeSettingsProject> getRecentProjects() {
+        return recentProjects;
+    }
+
+    public void addRecentProject(IdeSettingsProject ideSettingsProject) {
+        recentProjects.remove(ideSettingsProject);
+        recentProjects.add(ideSettingsProject);
+        if (recentProjects.size() > MAX_RECENT_PROJECTS) {
+            for (int i = 0; i < recentProjects.size() - MAX_RECENT_PROJECTS; i++) {
+                recentProjects.remove(0);
             }
         }
         saveSettingsToFile();

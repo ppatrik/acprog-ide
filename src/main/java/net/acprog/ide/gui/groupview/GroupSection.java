@@ -1,8 +1,9 @@
 package net.acprog.ide.gui.groupview;
 
-import net.acprog.ide.configurations.Component;
-import net.acprog.ide.configurations.Project;
 import net.acprog.ide.gui.EditorFrame;
+import net.acprog.ide.project.ComponentInterface;
+import net.acprog.ide.project.ComponentProxy;
+import net.acprog.ide.project.ProjectProxy;
 import net.acprog.ide.utils.event.EventType;
 
 import javax.swing.*;
@@ -211,7 +212,7 @@ public class GroupSection<G, I> extends JPanel {
                 boolean cellHasFocus) {
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-            Component component = (Component) value;
+            ComponentInterface component = (ComponentInterface) value;
 
             setText(component.getName());
             setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -234,10 +235,10 @@ public class GroupSection<G, I> extends JPanel {
                 try {
                     Transferable t = support.getTransferable();
                     Object value = t.getTransferData(ListItemTransferable.LIST_ITEM_DATA_FLAVOR);
-                    if (value instanceof Component) {
+                    if (value instanceof ComponentProxy) {
                         java.awt.Component component = support.getComponent();
                         if (component instanceof JPanel) {
-                            EditorFrame.instance.getIdeProject().getProject().moveComponent((Component) value, (Project.Group) group);
+                            EditorFrame.instance.getIdeProject().getProject().moveComponent((ComponentProxy) value, (ProjectProxy.Group) group);
                             EditorFrame.instance.getEventManager().callEvent(EventType.PROJECT_CHANGED);
                             accept = true;
                         }
@@ -259,10 +260,10 @@ public class GroupSection<G, I> extends JPanel {
             Transferable t = null;
             if (c instanceof JList) {
                 @SuppressWarnings("unchecked")
-                JList<Component> list = (JList<Component>) c;
+                JList<ComponentProxy> list = (JList<ComponentProxy>) c;
                 Object value = list.getSelectedValue();
-                if (value instanceof Component) {
-                    Component li = (Component) value;
+                if (value instanceof ComponentProxy) {
+                    ComponentProxy li = (ComponentProxy) value;
                     t = new ListItemTransferable(li);
                 }
             }
@@ -279,10 +280,10 @@ public class GroupSection<G, I> extends JPanel {
 
     public static class ListItemTransferable implements Transferable {
 
-        public static final DataFlavor LIST_ITEM_DATA_FLAVOR = new DataFlavor(Component.class, "java/ListItem");
-        private Component listItem;
+        public static final DataFlavor LIST_ITEM_DATA_FLAVOR = new DataFlavor(ComponentProxy.class, "java/ListItem");
+        private ComponentProxy listItem;
 
-        public ListItemTransferable(Component listItem) {
+        public ListItemTransferable(ComponentProxy listItem) {
             this.listItem = listItem;
         }
 

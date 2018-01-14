@@ -2,11 +2,11 @@ package net.acprog.ide.gui.components;
 
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
-import net.acprog.ide.configurations.Component;
 import net.acprog.ide.configurations.IdeProject;
-import net.acprog.ide.configurations.Project;
 import net.acprog.ide.gui.EditorFrame;
 import net.acprog.ide.gui.groupview.GroupView;
+import net.acprog.ide.project.ComponentInterface;
+import net.acprog.ide.project.ProjectProxy;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,9 +25,9 @@ public class VisualGroupEditorIdeComponent implements IdeComponent {
     }
 
     private void InitializeComponents() {
-        Map<Project.Group, List<Component>> groups = IdeProject.getInstance().getProject().getComponents();
+        Map<ProjectProxy.Group, List<ComponentInterface>> groups = IdeProject.getInstance().getProject().getComponents();
 
-        GroupView<Project.Group, Component> groupView = new GroupView<>();
+        GroupView<ProjectProxy.Group, ComponentInterface> groupView = new GroupView<>();
         groupView.setModel(groups);
 
         renderView = new JScrollPane(groupView);

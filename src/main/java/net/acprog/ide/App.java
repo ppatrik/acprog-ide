@@ -39,7 +39,7 @@ public class App {
             }
 
             // Default otvorenie posledného projektu, ak taký nie je otvoríme okno na vytvorenie nového alebo výber projektu
-            IdeSettingsProject latestProject = settings.getLatestProject();
+            IdeSettingsProject latestProject = settings.getRecentProject();
             if (latestProject != null) {
                 App.openProject(latestProject);
             } else {
@@ -65,7 +65,7 @@ public class App {
 
     public static void openProject(IdeSettingsProject ideSettingsProject) {
         try {
-            IdeSettings.getInstance().addLastProject(ideSettingsProject);
+            IdeSettings.getInstance().addRecentProject(ideSettingsProject);
             IdeProject ideProject = null;
             ideProject = ideSettingsProject.getIdeProject();
             EditorFrame frame = new EditorFrame(ideProject);

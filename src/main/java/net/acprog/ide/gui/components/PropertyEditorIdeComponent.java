@@ -6,10 +6,9 @@ import net.acprog.builder.components.Event;
 import net.acprog.builder.components.PropertyType;
 import net.acprog.builder.modules.ComponentType;
 import net.acprog.builder.modules.Module;
-import net.acprog.ide.configurations.Component;
 import net.acprog.ide.gui.EditorFrame;
 import net.acprog.ide.gui.property.AstType;
-import net.acprog.ide.utils.ACPModules;
+import net.acprog.ide.project.ComponentInterface;
 import net.acprog.ide.utils.event.EventType;
 import sk.gbox.swing.propertiespanel.*;
 import sk.gbox.swing.propertiespanel.types.BooleanType;
@@ -22,7 +21,7 @@ import java.util.Map;
 public class PropertyEditorIdeComponent implements IdeComponent {
     private final EditorFrame editorFrame;
 
-    protected Component projectComponent;
+    protected ComponentInterface projectComponent;
 
     protected PropertiesPanel propertiesPanel;
 
@@ -35,7 +34,7 @@ public class PropertyEditorIdeComponent implements IdeComponent {
     }
 
     public void onComponentSelected(EventType eventType, Object o) {
-        projectComponent = (Component) o;
+        projectComponent = (ComponentInterface) o;
         setModelProperties();
     }
 
@@ -52,7 +51,7 @@ public class PropertyEditorIdeComponent implements IdeComponent {
         if (projectComponent == null) {
             return;
         }
-        Module module = ACPModules.getModule(projectComponent.getParentComponent());
+        Module module = projectComponent.getModuleInstance();
         if (!(module instanceof ComponentType)) {
             return;
         }

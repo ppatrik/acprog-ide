@@ -1,9 +1,9 @@
-package net.acprog.ide.configurations;
+package net.acprog.ide.project;
 
-public class EepromItem {
+public class EepromItemProxy {
     private net.acprog.builder.project.EepromItem parentEepromItem;
 
-    public EepromItem(net.acprog.builder.project.EepromItem parentEepromItem) {
+    public EepromItemProxy(net.acprog.builder.project.EepromItem parentEepromItem) {
         this.parentEepromItem = parentEepromItem;
     }
 
