@@ -1,7 +1,11 @@
 package net.acprog.ide.utils.event;
 
+import javax.swing.*;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class EventManager {
 
@@ -29,8 +33,17 @@ public class EventManager {
         }
     }
 
+    private ExecutorService executor = null;
+
+    public ExecutorService executor() {
+        if (executor == null) {
+            executor = Executors.newCachedThreadPool();
+        }
+        return executor;
+    }
+
     public void callEvent(EventType eventType) {
-        callEvent(eventType, null);
+        executor().submit(() -> callEvent(eventType, null));
     }
 
     public void callEvent(EventType eventType, Object o) {
@@ -38,7 +51,17 @@ public class EventManager {
             return;
         }
 
-        ObserverManager observerManager = m_observerManagers.get(eventType);
-        observerManager.callEvent(eventType, o);
+        executor().submit(() -> {
+            try {
+                SwingUtilities.invokeAndWait(() -> {
+                    ObserverManager observerManager = m_observerManagers.get(eventType);
+                    observerManager.callEvent(eventType, o);
+                });
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }
