@@ -1,4 +1,4 @@
-package net.acprog.ide.gui.groupview;
+package net.acprog.ide.gui.components.visualgroupview;
 
 import net.acprog.ide.gui.EditorFrame;
 import net.acprog.ide.utils.event.EventType;
@@ -32,11 +32,15 @@ public class GroupView<G, I> extends JPanel {
 
     public void addSection(GroupSection<G, I> newSection, boolean expanded) {
         if (sections.containsKey(newSection.getGroup())) {
-            throw new IllegalArgumentException("Sekcia uz bola vlozená skôr.");
+            throw new IllegalArgumentException("Sekcia už bola vložená skôr.");
         }
         sections.put(newSection.getGroup(), newSection);
         add(newSection);
         newSection.setExpanded(expanded);
+    }
+
+    public void touchSection(GroupSection<G, I> newSection) {
+        newSection.touch();
     }
 
     public void setModel(Map<G, List<I>> model) {
@@ -45,12 +49,28 @@ public class GroupView<G, I> extends JPanel {
     }
 
     public void populateModelData() {
+        // vymazanie sekcii
+        for (Map.Entry<G, GroupSection<G, I>> entry : sections.entrySet()) {
+            if (!model.containsKey(entry.getKey())) {
+                remove(entry.getValue());
+                sections.remove(entry.getKey());
+            }
+        }
+
+        // vytvorenie sekcii
         for (Map.Entry<G, List<I>> entry : model.entrySet()) {
             if (!sections.containsKey(entry.getKey())) {
                 GroupSection<G, I> section = new GroupSection<G, I>(this, entry.getKey(), entry.getValue());
                 addSection(section, true);
+                touchSection(section);
+            } else {
+                GroupSection<G, I> section = sections.get(entry.getKey());
+                touchSection(section);
             }
+
         }
+
+        // nastaenie velkosti
         revalidate();
     }
 

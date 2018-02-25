@@ -1,4 +1,4 @@
-package net.acprog.ide.gui.groupview;
+package net.acprog.ide.gui.components.visualgroupview;
 
 import net.acprog.ide.gui.EditorFrame;
 import net.acprog.ide.project.ComponentInterface;
@@ -37,7 +37,7 @@ public class GroupSection<G, I> extends JPanel {
 
     private JComponent titlePanel;
 
-    private ArrowPanel arrowPanel;
+    private ArrowPanel arrowIconPanel;
 
     private JList<I> contentList;
 
@@ -106,11 +106,40 @@ public class GroupSection<G, I> extends JPanel {
             }
         });
 
-        arrowPanel = new ArrowPanel(BasicArrowButton.EAST);
-        arrowPanel.setPreferredSize(new Dimension(40, 40));
-        titlePanel.add(arrowPanel, BorderLayout.WEST);
+        arrowIconPanel = new ArrowPanel(BasicArrowButton.EAST);
+        arrowIconPanel.setPreferredSize(new Dimension(40, 40));
+        titlePanel.add(arrowIconPanel, BorderLayout.WEST);
 
-        titleComponent = new JLabel(group.toString() + " (" + model.size() + ")");
+        // region Ikony
+        JPanel iconsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+
+        JButton addButtonPanel = IconButton.createPlusButton();
+        addButtonPanel.setPreferredSize(new Dimension(40, 40));
+        iconsPanel.add(addButtonPanel);
+        addButtonPanel.addActionListener(e -> {
+            EditorFrame.instance.getEventManager().callEvent(EventType.GROUP_CREATE);
+        });
+
+        JButton editButtonPanel = IconButton.createEditButton();
+        editButtonPanel.setPreferredSize(new Dimension(40, 40));
+        iconsPanel.add(editButtonPanel);
+        editButtonPanel.addActionListener(e -> {
+            EditorFrame.instance.getEventManager().callEvent(EventType.GROUP_EDIT, (Object) getGroup());
+        });
+
+        JButton deleteButtonPanel = IconButton.createTrashButton();
+        deleteButtonPanel.setPreferredSize(new Dimension(40, 40));
+        iconsPanel.add(deleteButtonPanel);
+        deleteButtonPanel.addActionListener(e -> {
+            EditorFrame.instance.getEventManager().callEvent(EventType.GROUP_REMOVE, (Object) getGroup());
+        });
+
+        // endregion
+
+
+        titlePanel.add(iconsPanel, BorderLayout.EAST);
+
+        titleComponent = new JLabel(group.toString());
         titleComponent.setBorder(new CompoundBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2), titleComponent.getBorder()));
         titlePanel.add(titleComponent);
 
@@ -158,7 +187,7 @@ public class GroupSection<G, I> extends JPanel {
     public void styleSection() {
         titlePanel.setBackground(Color.LIGHT_GRAY);
         contentList.setBackground(Color.WHITE);
-        arrowPanel.setTheme(Color.LIGHT_GRAY, Color.GRAY, Color.LIGHT_GRAY, Color.LIGHT_GRAY);
+        arrowIconPanel.setTheme(Color.LIGHT_GRAY, Color.GRAY, Color.LIGHT_GRAY, Color.LIGHT_GRAY);
         contentList.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         contentList.setFixedCellWidth(minItemWidth);
         contentList.setFixedCellHeight(minItemHeight);
@@ -174,8 +203,8 @@ public class GroupSection<G, I> extends JPanel {
     public void setExpanded(boolean expanded) {
         this.expanded = expanded;
 
-        arrowPanel.changeDirection(expanded ? BasicArrowButton.SOUTH : BasicArrowButton.EAST);
-        arrowPanel.updateUI();
+        arrowIconPanel.changeDirection(expanded ? BasicArrowButton.SOUTH : BasicArrowButton.EAST);
+        arrowIconPanel.updateUI();
 
         contentList.setVisible(expanded);
         contentList.revalidate();
@@ -200,6 +229,10 @@ public class GroupSection<G, I> extends JPanel {
 
     public G getGroup() {
         return group;
+    }
+
+    public void touch() {
+        titleComponent.setText(group.toString() + " (" + model.size() + ")");
     }
 
     protected class SectionComponentCellRenderer extends DefaultListCellRenderer {

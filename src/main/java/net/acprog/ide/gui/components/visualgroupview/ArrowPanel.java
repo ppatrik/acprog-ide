@@ -1,4 +1,4 @@
-package net.acprog.ide.gui.groupview;
+package net.acprog.ide.gui.components.visualgroupview;
 
 import javax.swing.*;
 import java.awt.*;

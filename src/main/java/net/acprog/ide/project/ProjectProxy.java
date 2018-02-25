@@ -22,7 +22,7 @@ public class ProjectProxy implements ComponentInterface {
 
     private final Group undefinedGroup = new Group("undefined group");
 
-    public class Group {
+    public static class Group {
         public String name;
         public boolean projectComponentGroup;
         public boolean expanded;
@@ -82,15 +82,35 @@ public class ProjectProxy implements ComponentInterface {
         return map;
     }
 
-    public void addComponent(ComponentProxy component, Group group) {
-        if (group == null) {
-            group = undefinedGroup;
-        }
+    public List<ComponentInterface> createAndGetGroup(ProjectProxy.Group group) {
         if (!components.containsKey(group)) {
             components.put(group, new ArrayList<>());
         }
-        List<ComponentInterface> groupComponents = components.get(group);
-        groupComponents.add(component);
+        return components.get(group);
+    }
+
+    public void removeGroup(ProjectProxy.Group group) {
+        removeGroup(group, undefinedGroup);
+    }
+
+    public void removeGroup(ProjectProxy.Group group, ProjectProxy.Group newGroup) {
+        if (components.containsKey(group)) {
+            ComponentInterface[] data = new ComponentInterface[components.get(group).size()];
+            components.get(group).toArray(data);
+            for (ComponentInterface component : data) {
+                moveComponent((ComponentProxy) component, newGroup);
+            }
+            if (components.get(group).size() == 0) {
+                components.remove(group);
+            }
+        }
+    }
+
+    public void addComponent(ComponentProxy component, ProjectProxy.Group group) {
+        if (group == null) {
+            group = undefinedGroup;
+        }
+        createAndGetGroup(group).add(component);
         parentProject.getComponents().add(component.getParentComponent());
     }
 
