@@ -5,6 +5,7 @@ import net.acprog.ide.utils.event.EventType;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,12 +50,16 @@ public class GroupView<G, I> extends JPanel {
     }
 
     public void populateModelData() {
+        List<Map.Entry<G, GroupSection<G, I>>> toRemove = new ArrayList<>();
         // vymazanie sekcii
         for (Map.Entry<G, GroupSection<G, I>> entry : sections.entrySet()) {
             if (!model.containsKey(entry.getKey())) {
-                remove(entry.getValue());
-                sections.remove(entry.getKey());
+                toRemove.add(entry);
             }
+        }
+        for (Map.Entry<G, GroupSection<G, I>> entry : toRemove) {
+            remove(entry.getValue());
+            sections.remove(entry.getKey());
         }
 
         // vytvorenie sekcii
