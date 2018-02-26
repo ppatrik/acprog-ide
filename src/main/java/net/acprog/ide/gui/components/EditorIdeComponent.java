@@ -3,6 +3,8 @@ package net.acprog.ide.gui.components;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
 import net.acprog.ide.gui.EditorFrame;
+import net.acprog.ide.lang.LanguageSupport;
+import net.acprog.ide.lang.cpp.CppLanguageSupport;
 import net.acprog.ide.utils.event.EventType;
 import net.acprog.ide.utils.event.Observer;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
@@ -65,11 +67,13 @@ public class EditorIdeComponent implements IdeComponent {
 
     private Parser parser = new AcprogParser();
 
+    private LanguageSupport ls = new CppLanguageSupport();
+
     private void InitializeComponents() {
         textArea = new RSyntaxTextArea(20, 60);
         textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_CPLUSPLUS);
         textArea.setCodeFoldingEnabled(true);
-        textArea.addParser(parser);
+        ls.install(textArea);
 
         sp = new RTextScrollPane(textArea);
     }

@@ -15,6 +15,12 @@
             <artifactId>rsyntaxtextarea</artifactId>
             <version>2.6.1</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.fifesoft/autocomplete -->
+        <dependency>
+            <groupId>com.fifesoft</groupId>
+            <artifactId>autocomplete</artifactId>
+            <version>2.6.1</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/org.swinglabs/swingx -->
         <dependency>
             <groupId>org.swinglabs</groupId>
@@ -34,6 +40,14 @@
             <artifactId>properties-panel</artifactId>
             <version>0.0.2</version>
             <systemPath>${project.basedir}/lib/properties-panel-0.0.2.jar</systemPath>
+            <scope>system</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>java_cup</groupId>
+            <artifactId>java_cup</artifactId>
+            <version>11b</version>
+            <systemPath>${project.basedir}/lib/java-cup-11b-runtime.jar</systemPath>
             <scope>system</scope>
         </dependency>
 
