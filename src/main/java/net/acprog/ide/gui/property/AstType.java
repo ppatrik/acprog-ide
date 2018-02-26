@@ -1,10 +1,13 @@
 package net.acprog.ide.gui.property;
 
 import net.acprog.ide.gui.EditorFrame;
+import net.acprog.ide.lang.cpp.core.Function;
+import net.acprog.ide.lang.cpp.util.SemanticAnalysis;
 import sk.gbox.swing.propertiespanel.PropertiesPanel;
 import sk.gbox.swing.propertiespanel.types.StringType;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
@@ -14,6 +17,7 @@ import java.awt.event.*;
 import java.beans.ConstructorProperties;
 import java.io.Serializable;
 import java.util.EventObject;
+import java.util.Map;
 
 public class AstType extends StringType {
 
@@ -26,7 +30,7 @@ public class AstType extends StringType {
         /**
          * The Swing component being edited.
          */
-        protected JTextField editorTextField;
+        protected JComboBox<String> editorTextField;
         protected JButton editorButton;
         protected JPanel editorPanel;
 
@@ -52,32 +56,77 @@ public class AstType extends StringType {
          */
         @ConstructorProperties({"component"})
         public CellEditor() {
-            editorPanel = new JPanel(new BorderLayout());
-            editorButton = new JButton("+");
-            editorTextField = new JTextField();
-            editorPanel.add(editorTextField, BorderLayout.CENTER);
-            editorPanel.add(editorButton, BorderLayout.EAST);
 
-            editorButton.setMargin(new Insets(5, 5, 5, 5));
+            // Inicializácia
+
+            ///////////////////////////////////////////////
+            // JComboBox                  // v // + // f //
+            ///////////////////////////////////////////////
+
+            editorPanel = new JPanel(new BorderLayout());
             editorPanel.setBackground(Color.WHITE);
-            editorTextField.setHorizontalAlignment(10);
-            editorTextField.setBorder(null);
+
+            editorTextField = new JComboBox<>();
+            editorTextField.setEditable(true);
+            removeBorder(editorTextField);
+            editorPanel.add(editorTextField, BorderLayout.CENTER);
+
+            JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+            editorPanel.add(actionsPanel, BorderLayout.EAST);
+
+            JButton createNewFunctionButton = new JButton("+");
+            createNewFunctionButton.setMargin(new Insets(5, 5, 5, 5));
+            actionsPanel.add(createNewFunctionButton);
+
+            JButton findFunctionButton = new JButton("f");
+            findFunctionButton.setMargin(new Insets(5, 5, 5, 5));
+            actionsPanel.add(findFunctionButton);
+
+            // Actions
 
             this.clickCountToStart = 2;
             delegate = new CellEditor.EditorDelegate() {
                 public void setValue(Object value) {
-                    editorTextField.setText((value != null) ? value.toString() : "");
+                    editorTextField.setModel(new DefaultComboBoxModel<>(getAvailableFunctions()));
+                    editorTextField.setSelectedItem((value != null) ? value.toString() : "");
                 }
 
                 public Object getCellEditorValue() {
-                    return editorTextField.getText();
+                    return editorTextField.getSelectedItem();
                 }
             };
             editorTextField.addActionListener(delegate);
 
-            editorButton.addActionListener(e -> {
+            createNewFunctionButton.addActionListener(e -> {
                 EditorFrame.instance.code.createOrFindMethod("componentOnAction");
             });
+            findFunctionButton.addActionListener(e -> {
+                EditorFrame.instance.code.createOrFindMethod("findFunction");
+            });
+        }
+
+        private void removeBorder(JComboBox<String> combo) {
+            for (int i = 0; i < combo.getComponentCount(); i++) {
+                if (combo.getComponent(i) instanceof JComponent) {
+                    ((JComponent) combo.getComponent(i)).setBorder(new EmptyBorder(0, 0, 0, 0));
+                }
+
+
+                if (combo.getComponent(i) instanceof AbstractButton) {
+                    ((AbstractButton) combo.getComponent(i)).setBorderPainted(false);
+                }
+            }
+        }
+
+        private String[] getAvailableFunctions() {
+            Map<String, Function> functionList = SemanticAnalysis.getInstance().getProgram().getFunctions();
+            String output[] = new String[functionList.size() + 1];
+            int i = 0;
+            output[i++] = null;
+            for (Map.Entry<String, Function> f : functionList.entrySet()) {
+                output[i++] = f.getValue().getName();
+            }
+            return output;
         }
 
         /**
