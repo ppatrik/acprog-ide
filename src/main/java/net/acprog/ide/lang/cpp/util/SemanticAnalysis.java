@@ -38,7 +38,7 @@ public class SemanticAnalysis {
 
     private Map<String, Function> extimatedFunctions = new HashMap<>();
 
-    private Map<String, Variable> extimatedVariables = new HashMap<>();
+    private Map<String, Variable> estimatedVariables = new HashMap<>();
 
     private SemanticAnalysis() {
         scopeStack = new Stack<ScopedEntity>();
@@ -60,7 +60,7 @@ public class SemanticAnalysis {
         f.setReturnedType(new Type("string"));
         extimatedFunctions.put("F", f);
 
-        extimatedVariables.put("led", new Variable("led", new Type("Led")));
+        estimatedVariables.put("led", new Variable("led", new Type("Led")));
     }
 
     // Operations ...
@@ -117,12 +117,12 @@ public class SemanticAnalysis {
 
     public Identifier getIdentifier(String name) {
         if (!checkVariableNameAllScopes(name) && !checkFunctionName(name)) {
-            extimatedVariables.put(name, new Variable(name, new Type(name)));
+            estimatedVariables.put(name, new Variable(name, new Type(name)));
             // TODO: warning throw new SemanticException("Identifier name doesn't exists: " + name);
         }
 
-        if (extimatedVariables.get(name) != null)
-            return extimatedVariables.get(name);
+        if (estimatedVariables.get(name) != null)
+            return estimatedVariables.get(name);
 
         if (cProgram.getFunctions().get(name) != null)
             return cProgram.getFunctions().get(name);
@@ -150,14 +150,14 @@ public class SemanticAnalysis {
             variablesName = scopeStack.peek().getVariable().keySet();
         }
 
-        variablesName.addAll(extimatedVariables.keySet());
+        variablesName.addAll(estimatedVariables.keySet());
 
         return variablesName.contains(name);
     }
 
     public boolean checkVariableNameAllScopes(String name) {
         HashSet<String> variablesName = new HashSet<String>();
-        variablesName.addAll(extimatedVariables.keySet());
+        variablesName.addAll(estimatedVariables.keySet());
         variablesName.addAll(cProgram.getVariable().keySet());
         if (!scopeStack.isEmpty()) {
             variablesName.addAll(scopeStack.peek().getVariable().keySet());
@@ -315,5 +315,9 @@ public class SemanticAnalysis {
 
     public Program getProgram() {
         return cProgram;
+    }
+
+    public static void reset() {
+        sAnalysis = null;
     }
 }

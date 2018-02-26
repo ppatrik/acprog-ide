@@ -4,6 +4,7 @@ package net.acprog.ide.lang.cpp;
 import java_cup.runtime.ComplexSymbolFactory;
 import net.acprog.ide.lang.cpp.generated.Lexer;
 import net.acprog.ide.lang.cpp.generated.Parser;
+import net.acprog.ide.lang.cpp.util.SemanticAnalysis;
 import org.fife.io.DocumentReader;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
@@ -81,6 +82,7 @@ public class CppParser extends AbstractParser {
     @Override
     public ParseResult parse(RSyntaxDocument doc, String style) {
         try {
+            SemanticAnalysis.reset();
             ComplexSymbolFactory csf = new ComplexSymbolFactory();
             DocumentReader r = new DocumentReader(doc);
             Lexer scanner = new Lexer(new BufferedReader(r), csf);
